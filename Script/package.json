@@ -1,0 +1,21 @@
+{
+	"name": "script",
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"devext": "nodemon --watch ./src --watch ./insert.js --exec \"svelte-bundle -i src/routes/+page.svelte -f && node insert\" -e json,ts,js,css,html,svelte"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "^3.0.0",
+		"@sveltejs/kit": "^2.0.0",
+		"@sveltejs/vite-plugin-svelte": "^4.0.0",
+		"svelte": "^5.0.0",
+		"vite": "^5.0.3"
+	},
+	"dependencies": {
+		"svelte-bundle": "^0.0.24"
+	}
+}

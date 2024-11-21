@@ -1,0 +1,27 @@
+{
+    "manifest_version": 3,
+    "name": "Aeries Extension",
+    "version": "0.1.0",
+    "description": "An improved grade viewer for Aeries.",
+    "action": {
+      "default_title": "Aeries Extension",
+      "default_popup": "index.html"
+    },
+    "permissions": [
+      "tabs",
+      "scripting",
+      "webNavigation"
+    ],
+     "host_permissions": [
+        "http://*/*",
+        "https://*/*"
+    ],
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "web_accessible_resources": [{
+        "resources": ["injected-script.js"],
+        "matches": ["<all_urls>"]
+    }]
+  }
