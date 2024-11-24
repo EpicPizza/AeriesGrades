@@ -1,9 +1,9 @@
-chrome.webNavigation.onCompleted.addListener(async (details) => {
+chrome.webNavigation.onCommitted.addListener(async (details) => {
     const tab = details.tabId;
 
     let now = await chrome.tabs.get(tab);
 
-    if(!(now.url.startsWith("https://fremontusd.aeries.net/student/GradebookSummary.aspx") || now.url.startsWith("https://fremontusd.aeries.net/student/GradebookDetails.aspx"))) return;
+    if(!(now.url.includes("GradebookSummary.aspx") || now.url.includes("GradebookDetails.aspx") || now.url.includes("Dashboard.aspx"))) return;
 
     chrome.scripting
         .executeScript({
@@ -17,5 +17,5 @@ chrome.webNavigation.onCompleted.addListener(async (details) => {
         target : { tabId : tab },
             files : [ "tailwindcss.js" ],
         })
-        .then(() => console.log("script injected"));
+        .then(() => console.log("tailwind injected"));
 })

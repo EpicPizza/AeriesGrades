@@ -9,7 +9,7 @@ fs.readFile('./output.html', 'utf8', (err, data) => {
 
   const final = "<div class=\"w-full h-full\">" + data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>")) + "</div>";
 
-  fs.readFile('../Extension/static/script.js', 'utf8', (err, code) => {
+  fs.readFile('../Extension/script.js', 'utf8', (err, code) => {
     if (err) {
       console.error(err);
       return;
@@ -25,7 +25,7 @@ fs.readFile('./output.html', 'utf8', (err, data) => {
 
     code = code.substring(0, code.indexOf("---")) + data.substring(data.indexOf("<script>") + 8, data.indexOf("</script>")) + code.substring(code.indexOf("---") + 3);
 
-    fs.writeFile('../Extension/static/script.js', code, (err) => {
+    fs.writeFile('../Extension/script.js', code, (err) => {
       if (err) {
         console.error(err);
       } else {

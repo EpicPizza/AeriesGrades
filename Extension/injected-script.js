@@ -9,8 +9,7 @@ setInterval(() => {
     
     const parameter = value.substring(value.indexOf("('") + 2, value.indexOf("',''"));
 
-    console.log(parameter);
-    console.log(element);
+    localStorage.setItem("navigating", "true");
 
     window.__doPostBack(parameter, '');
 }, 100)
