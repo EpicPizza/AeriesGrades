@@ -2,7 +2,7 @@ An improved interface for viewing your grades on Aeries! See all your assignment
 
 ## How it works
 
-Once this extension is installed, it will add content scripts to a page for all the applicable pages that the extension runs on (Dashboard, Gradebook, GradebookDetails). Then the content script will inject the html and js bundled from the svelte app in the Script folder. It'll also do smaller tasks such as hiding the original page and making sure styling from my extension doesn't significantly break other things. An additional script is injected as a inline script element that pays attention to which element needs to be clicked and does it with aeries functions, since the content script isn't able to do it. The tailwindcss file is a css framework used for styling. After all of this, it is the bundled svelte app's job now to do all the scrapping of data and interface.
+Once this extension is installed, it will add content scripts to a page for all the applicable pages that the extension runs on (Dashboard, Gradebook, GradebookDetails). Then the content script will inject the html and js bundled from the svelte app in the Script folder. It'll also do smaller tasks such as hiding the original page and making sure styling from my extension doesn't significantly break other things. The tailwindcss file is a css framework used for styling. After all of this, it is the bundled svelte app's job now to do all the scrapping of data and interface.
 
 ## Why a monorepo?
 
