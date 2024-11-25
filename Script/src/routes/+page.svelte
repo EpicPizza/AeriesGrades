@@ -10,6 +10,8 @@
     function start() {
         current = document.querySelector(".AeriesFullPageParentNavSubLinkMenu > .CurrentPage").innerText;
 
+        console.log("hi", current);
+
         $started = true;
     }
 

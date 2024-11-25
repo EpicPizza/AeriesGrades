@@ -1,0 +1,22 @@
+{
+    "manifest_version": 3,
+    "name": "Aeries Grades+",
+    "version": "0.1.0",
+    "description": "An improved grade viewer for Aeries.",
+    "permissions": [
+      "scripting",
+      "webNavigation"
+    ],
+     "host_permissions": [
+        "http://*.aeries.net/*",
+        "https://*.aeries.net/*"
+    ],
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "web_accessible_resources": [{
+        "resources": ["injected-script.js"],
+        "matches": ["<all_urls>"]
+    }]
+  }

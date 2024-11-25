@@ -117,7 +117,7 @@
         <!-- Cannot use .grid since it will collide with another grid with class .grid aeries uses for dashboard. -->
         <div bind:this={grid} style="display: grid;" class="grid-cols-1 mb-6 md:grid-cols-2 lg:grid-cols-3 gap-3 w-full">
             {#each classes as period, i}
-                <button bind:this={periods[i]} on:click|preventDefault|stopPropagation={() => { document.getElementById(period.grabber).classList.add("CLICKNOW"); }} class="bg-black bg-opacity-10 dark:bg-white dark:bg-opacity-10 rounded-lg p-6 w-full flex gap-2 text-left">
+                <button bind:this={periods[i]} on:click|preventDefault|stopPropagation={() => { localStorage.setItem('navigating', true); document.getElementById(period.grabber).click(); }} class="bg-black bg-opacity-10 dark:bg-white dark:bg-opacity-10 rounded-lg p-6 w-full flex gap-2 text-left">
                     <div class="w-full">
                         <p class="text-xl mb-2">{period.name}</p>
                         <p class="opacity-75 mb-1">{period.teacher}</p>

@@ -2,21 +2,45 @@
     "manifest_version": 3,
     "name": "Aeries Grades+",
     "version": "0.1.0",
+    "author": "Alejandro Estrella",
     "description": "An improved grade viewer for Aeries.",
     "permissions": [
-      "scripting",
-      "webNavigation"
+      
     ],
      "host_permissions": [
-        "http://*.aeries.net/*",
-        "https://*.aeries.net/*"
+        "https://*.aeries.net/*/GradebookSummary.aspx*",
+        "https://*.aeries.net/*/GradebookDetails.aspx*",
+        "https://*.aeries.net/*/Dashboard.aspx*"
     ],
-    "background": {
-        "service_worker": "background.js",
-        "type": "module"
-    },
     "web_accessible_resources": [{
         "resources": ["injected-script.js"],
         "matches": ["<all_urls>"]
-    }]
+    }],
+    "icons": {
+        "128": "info.png"
+    },
+    "content_scripts": [
+        {
+            "run_at": "document_end",
+            "matches": [
+              "https://*.aeries.net/*/GradebookSummary.aspx*",
+              "https://*.aeries.net/*/GradebookDetails.aspx*",
+              "https://*.aeries.net/*/Dashboard.aspx*"
+            ],
+            "js": ["script.js"],
+            "all_frames": true,
+            "world": "MAIN"
+        },
+        {
+            "run_at": "document_end",
+            "matches": [
+              "https://*.aeries.net/*/GradebookSummary.aspx*",
+              "https://*.aeries.net/*/GradebookDetails.aspx*",
+              "https://*.aeries.net/*/Dashboard.aspx*"
+            ],
+            "js": ["tailwindcss.js"],
+            "all_frames": true,
+            "world": "MAIN"
+        }
+    ]
   }
