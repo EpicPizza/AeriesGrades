@@ -10,7 +10,7 @@ Originally, I tended to this to be two seperate svelte apps combined into one ex
 
 ## More about Script
 
-I made this extension in svelte so I can quickly develop the interface. It comes with its own disadvantages, as svelte apps weren't necessarily designed to run within other pages. So, I used a package that bundles the svelte app into one file. Then, insert.js will take the necessary js and html and place into the content script of the extension. Some limitations of the svelte app is that functions and stores such as $page and onMount are not available in this environment, as such, I added a start funciton which is started by the content script by clicking a hidden button.
+I made this extension in svelte so I can quickly develop the interface. It comes with its own disadvantages, as svelte apps weren't necessarily designed to run within other pages. So, I used a package that bundles the svelte app into one file. Then, insert.js will take the necessary js and html and place into the content script of the extension. Some limitations of the svelte app is that functions and stores such as $page and onMount are not available in this environment, as such, I added a start function which is started by the content script by clicking a hidden button.
 
 ## Commands
 
