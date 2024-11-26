@@ -42,5 +42,10 @@
             "all_frames": true,
             "world": "MAIN"
         }
-    ]
+    ],
+    "browser_specific_settings": {
+      "gecko": {
+        "id": "aaeriesgradesextension@example.com"
+      }
+    }
   }
