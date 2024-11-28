@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Aeries Grades+",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "author": "Alejandro Estrella",
     "description": "An improved grade viewer for Aeries.",
     "permissions": [
@@ -12,10 +12,6 @@
         "https://*.aeries.net/*/GradebookDetails.aspx*",
         "https://*.aeries.net/*/Dashboard.aspx*"
     ],
-    "web_accessible_resources": [{
-        "resources": ["injected-script.js"],
-        "matches": ["<all_urls>"]
-    }],
     "icons": {
         "128": "info.png"
     },
@@ -45,7 +41,8 @@
     ],
     "browser_specific_settings": {
       "gecko": {
-        "id": "aaeriesgradesextension@example.com"
+        "id": "aaeriesgradesextensionself@example.com",
+        "update_url": "https://ahsengineering.org/updates.json"
       }
     }
   }

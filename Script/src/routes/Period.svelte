@@ -98,32 +98,33 @@
                     console.log(scores);
 
                     if(scores.length < 7 || scores[1].trim() == "" || scores[1].trim() == "NA") {
-                        assignment.weighted = { score: 0, total: 0 };
+                        assignment.weight = 1;
                         assignment.actual = { score: 0, total: 0 };
                         assignment.edit = { score: null, total: 0 };
                         assignment.missing = false;
 
                         assignment.percent = -1;
                     } else if(scores[1].trim() == "Missing") {
-                        assignment.weighted = { score: 0, total: 0 };
+                        assignment.weight = 1;
                         assignment.missing = true;
                         assignment.actual = { score: parseFloat(scores[5].trim()), total: 0 };
                         assignment.edit = { score: 0, total: 0 };
 
                         assignment.percent = 0;
                     } else {
-                        assignment.weighted = { score: parseFloat(scores[1].trim()), total: 0 };
+                        assignment.weight = 1;
                         assignment.missing = false;
                         assignment.actual = { score: parseFloat(scores[5].trim()), total: 0 };
-                        assignment.edit = { score: parseFloat(scores[1].trim()), total: 0 };
+                        assignment.edit = { score: parseFloat(scores[5].trim()), total: 0 };
 
                         assignment.percent = parseFloat(scores[8].substring(0, scores[8].length - 1));
                     }
 
                     if(scores.length > 7) {
-                        assignment.weighted.total = parseFloat(scores[3].trim());
+                        assignment.weight = parseFloat(scores[3].trim()) / parseFloat(scores[7].trim());
+                        if(isNaN(assignment.weight)) assignment.weight = 1;
                         assignment.actual.total = parseFloat(scores[7].trim());
-                        assignment.edit.total = parseFloat(scores[3].trim());
+                        assignment.edit.total = parseFloat(scores[7].trim());
                     }
                 }
 
@@ -213,10 +214,10 @@
             category.assignments.forEach(assignment => {
                 //type coerce strikes again
                 if((assignment.edit.score || assignment.edit.score === 0) && assignment.edit.total) {
-                    points += parseFloat(assignment.edit.score);
-                    total += parseFloat(assignment.edit.total);
+                    points += parseFloat(assignment.edit.score) * assignment.weight;
+                    total += parseFloat(assignment.edit.total) * assignment.weight;
                 } else if(assignment.edit.score && assignment.edit.total === 0) {
-                    points += parseFloat(assignment.edit.score);
+                    points += parseFloat(assignment.edit.score) * assignment.weight;
                 }
             });
 
@@ -279,17 +280,17 @@
     <!-- Cannot use .grid since it will collide with another grid with class .grid aeries uses for dashboard. -->
     {#each categories as category, j}
         {#if category.fake == false || edit}
-            <div class="border-b z-10 sticky top-0 px-4 bg-white dark:bg-black border-border-light dark:border-border-dark border-gray-300 dark:border-gray-700 p-5 pt-4">
+            <div class="border-b z-5 sticky top-0 px-4 bg-white dark:bg-black border-border-light dark:border-border-dark border-gray-300 dark:border-gray-700 p-5 pt-4">
                 <div class="mb-3 flex -ml-4 -mr-4 items-center justify-between h-8">
                     {#if edit}
                         <div class="flex items-center">
                             <h1 class="text-xl font-extrabold tracking-wide">
                                 {#if category.fake}
-                                    <input bind:value={category.name} placeholder="Untitled" class="w-48 px-2 rounded-md py-1 -my-1 mr-1 text-left bg-black dark:bg-white bg-opacity-10 dark:bg-opacity-10">(
+                                    <input bind:value={category.name} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} placeholder="Untitled" class="w-48 px-2 rounded-md py-1 -my-1 mr-1 text-left bg-black dark:bg-white bg-opacity-10 dark:bg-opacity-10">(
                                 {:else}
                                     {category.name} (
                                 {/if}
-                                <input bind:value={category.edit.weight} class="w-16 px-2 rounded-md py-1 -my-1 text-center bg-black dark:bg-white bg-opacity-10 dark:bg-opacity-10">
+                                <input bind:value={category.edit.weight} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-16 px-2 rounded-md py-1 -my-1 text-center bg-black dark:bg-white bg-opacity-10 dark:bg-opacity-10">
                             /%)</h1>
                             {#if category.fake}
                                 <button aria-label="Delete" on:click|preventDefault|stopPropagation={() => { categories.splice(j, 1); categories = categories; }} class="scale-75 fill-black dark:fill-white -my-0.5">
@@ -312,12 +313,12 @@
                         {:else}
                             {#if edit}
                                 <div class="flex items-center">
-                                    {#if category.edit.points != category.points || category.edit.total != category.total}
+                                    {#if Math.round(category.edit.points * 100) / 100 != category.points || Math.round(category.edit.total * 100) / 100  != category.total}
                                         <div class="scale-[.65] fill-black dark:fill-white">
                                             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
                                         </div>
                                     {/if}
-                                    <p class="text-lg font-bold {category.edit.percent >= 90 ? "text-green-700 dark:text-green-400" : category.edit.percent >= 80 ? "text-yellow-700 dark:text-yellow-400" : category.edit.percent >= 70 ? "text-orange-500 dark:text-orange-400" : category.edit.percent > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white" }">{category.edit.percent.toFixed(2)}% ({category.edit.points}/{category.edit.total})</p>
+                                    <p class="text-lg font-bold {category.edit.percent >= 90 ? "text-green-700 dark:text-green-400" : category.edit.percent >= 80 ? "text-yellow-700 dark:text-yellow-400" : category.edit.percent >= 70 ? "text-orange-500 dark:text-orange-400" : category.edit.percent > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white" }">{Math.floor(category.edit.percent * 100) / 100}% ({Math.floor(category.edit.points * 100) / 100}/{Math.floor(category.edit.total * 100) / 100})</p>
                                 </div>
                             {:else}     
                                 <p class="text-lg font-bold {category.percent >= 90 ? "text-green-700 dark:text-green-400" : category.percent >= 80 ? "text-yellow-700 dark:text-yellow-400" : category.percent >= 70 ? "text-orange-500 dark:text-orange-400" : category.percent > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white" }">{category.percent}% ({category.points}/{category.total})</p>
@@ -333,9 +334,6 @@
                         <p class="w-[10%]">Percent</p>
                         <p class="w-[20%]">
                             Score
-                            {#if !edit}
-                                <span class="text-sm opacity-80 ml-0.5">(Actual)</span>
-                            {/if}
                         </p>
                     {:else if width > 800}
                         <p class="w-1/3">Name</p>
@@ -343,26 +341,17 @@
                         <p class="w-1/6">Percent</p>
                         <p class="w-1/6">
                             Score
-                            {#if !edit}
-                                <span class="text-sm opacity-80 ml-0.5">(Actual)</span>
-                            {/if}
                         </p>
                     {:else if width > 640}
                         <p class="w-1/2">Name</p>
                         <p class="w-1/6">Perecent</p>
                         <p class="w-2/6">
                             Score
-                            {#if !edit}
-                                <span class="text-sm opacity-80 ml-0.5">(Actual)</span>
-                            {/if}
                         </p>
                     {:else}
                         <p class="w-[62%]">Name</p>
                         <p class="w-[38%]">
                             Score
-                            {#if !edit}
-                                <span class="text-sm opacity-80 ml-0.5">(Actual)</span>
-                            {/if}
                         </p>
                     {/if}
                 </div>
@@ -381,7 +370,7 @@
                                         {#if edit}
                                             {!(assignment.edit.score || assignment.edit.score === 0) || !assignment.edit.total ? "" : (assignment.edit.score / assignment.edit.total * 100).toFixed(2) + "%"}
                                         {:else}
-                                            {assignment.percent == -1 || assignment.weighted.total == 0 ? "" : assignment.percent + "%"}
+                                            {assignment.percent == -1 || assignment.actual.total == 0 ? "" : assignment.percent + "%"}
                                         {/if}
                                     </p>
                                     <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -390,18 +379,23 @@
                                         {#if edit}
                                             <div class="flex items-center">
                                                 <div class="bg-black w-fit h-full dark:bg-white bg-opacity-10 dark:bg-opacity-10 rounded-md">
-                                                    <input bind:value={assignment.edit.score} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
-                                                    <input bind:value={assignment.edit.total} class="w-10 text-left mr-[0.22rem] bg-white bg-opacity-0">
+                                                    <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
+                                                    <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-white bg-opacity-0">
                                                 </div>
-                                                {#if ((assignment.edit.score != assignment.weighted.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.weighted.total }
+                                                {#if assignment.weight != 1 && assignment.actual.total != 0}
+                                                    <span class="text-sm opacity-80 ml-1.5">
+                                                        x{Math.round(assignment.weight * 100) / 100}   
+                                                    </span>
+                                                {/if}
+                                                {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
                                                     <!-- svelte-ignore node_invalid_placement_ssr -->
                                                     <button aria-label="Reset" on:click={() => {
                                                         if(assignment.percent != -1) {
-                                                            assignment.edit.score = assignment.weighted.score; 
-                                                            assignment.edit.total = assignment.weighted.total;
+                                                            assignment.edit.score = assignment.actual.score; 
+                                                            assignment.edit.total = assignment.actual.total;
                                                         } else {
                                                             assignment.edit.score = "";
-                                                            assignment.edit.total = assignment.weighted.total;
+                                                            assignment.edit.total = assignment.actual.total;
                                                         }
                                                     }} class="scale-75 mr-2 fill-black dark:fill-white -my-0.5">
                                                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
@@ -409,13 +403,13 @@
                                                 {/if}
                                             </div>
                                         {:else}
-                                            {#if assignment.percent == -1 && assignment.weighted.total == 0}
+                                            {#if assignment.percent == -1 && assignment.actual.total == 0}
                                                 - / -
                                             {:else}
-                                                {assignment.percent == -1 ? "-" : assignment.weighted.score}/{assignment.weighted.total}
-                                                {#if assignment.weighted.total != assignment.actual.total}
+                                                {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
+                                                {#if assignment.weight != 1}
                                                     <span class="text-sm opacity-80 ml-0.5">
-                                                        ({assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total})      
+                                                        x{Math.round(assignment.weight * 100) / 100}   
                                                     </span>
                                                 {/if}
                                             {/if}
@@ -428,27 +422,32 @@
                                         {#if edit}
                                             {!(assignment.edit.score || assignment.edit.score === 0) || !assignment.edit.total ? "" : (assignment.edit.score / assignment.edit.total * 100).toFixed(2) + "%"}
                                         {:else}
-                                            {assignment.percent == -1 || assignment.weighted.total == 0 ? "" : assignment.percent + "%"}
+                                            {assignment.percent == -1 || assignment.actual.total == 0 ? "" : assignment.percent + "%"}
                                         {/if}
                                     </p>
                                     <!-- svelte-ignore a11y_click_events_have_key_events -->
                                     <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                    <div on:click|stopPropagation|preventDefault class="w-1/5 {edit ? "p-1.5 -my-1.5" : ""}">
+                                    <div on:click|stopPropagation|preventDefault class="w-[25%] {edit ? "p-1.5 -my-1.5" : ""}">
                                         {#if edit}
                                             <div class="flex items-center">
                                                 <div class="bg-black w-fit h-full dark:bg-white bg-opacity-10 dark:bg-opacity-10 rounded-md">
-                                                    <input bind:value={assignment.edit.score} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
-                                                    <input bind:value={assignment.edit.total} class="w-10 text-left mr-[0.22rem] bg-white bg-opacity-0">
+                                                    <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
+                                                    <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-white bg-opacity-0">
                                                 </div>
-                                                {#if ((assignment.edit.score != assignment.weighted.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.weighted.total }
+                                                {#if assignment.weight != 1 && assignment.actual.total != 0}
+                                                    <span class="text-sm opacity-80 ml-1.5">
+                                                        x{Math.round(assignment.weight * 100) / 100}   
+                                                    </span>
+                                                {/if}
+                                                {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
                                                     <!-- svelte-ignore node_invalid_placement_ssr -->
                                                     <button aria-label="Reset" on:click={() => {
                                                         if(assignment.percent != -1) {
-                                                            assignment.edit.score = assignment.weighted.score; 
-                                                            assignment.edit.total = assignment.weighted.total;
+                                                            assignment.edit.score = assignment.actual.score; 
+                                                            assignment.edit.total = assignment.actual.total;
                                                         } else {
                                                             assignment.edit.score = "";
-                                                            assignment.edit.total = assignment.weighted.total;
+                                                            assignment.edit.total = assignment.actual.total;
                                                         }
                                                     }} class="scale-75 mr-2 fill-black dark:fill-white -my-0.5">
                                                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
@@ -456,13 +455,13 @@
                                                 {/if}
                                             </div>
                                         {:else}
-                                            {#if assignment.percent == -1 && assignment.weighted.total == 0}
+                                            {#if assignment.percent == -1 && assignment.actual.total == 0}
                                                 - / -
                                             {:else}
-                                                {assignment.percent == -1 ? "-" : assignment.weighted.score}/{assignment.weighted.total}
-                                                {#if assignment.weighted.total != assignment.actual.total}
+                                                {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
+                                                {#if assignment.weight != 1 && assignment.actual.total != 0}
                                                     <span class="text-sm opacity-80 ml-0.5">
-                                                        ({assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total})      
+                                                        x{Math.round(assignment.weight * 100) / 100}   
                                                     </span>
                                                 {/if}
                                             {/if}
@@ -474,7 +473,7 @@
                                         {#if edit}
                                             {!(assignment.edit.score || assignment.edit.score === 0) || !assignment.edit.total ? "" : (assignment.edit.score / assignment.edit.total * 100).toFixed(2) + "%"}
                                         {:else}
-                                            {assignment.percent == -1 || assignment.weighted.total == 0 ? "" : assignment.percent + "%"}
+                                            {assignment.percent == -1 || assignment.actual.total == 0 ? "" : assignment.percent + "%"}
                                         {/if}
                                     </p>
                                     <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -483,18 +482,23 @@
                                         {#if edit}
                                             <div class="flex items-center">
                                                 <div class="bg-black w-fit h-full dark:bg-white bg-opacity-10 dark:bg-opacity-10 rounded-md">
-                                                    <input bind:value={assignment.edit.score} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
-                                                    <input bind:value={assignment.edit.total} class="w-10 text-left mr-[0.22rem] bg-white bg-opacity-0">
+                                                    <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
+                                                    <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-white bg-opacity-0">
                                                 </div>
-                                                {#if ((assignment.edit.score != assignment.weighted.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.weighted.total }
+                                                {#if assignment.weight != 1 && assignment.actual.total != 0}
+                                                    <span class="text-sm opacity-80 ml-1.5">
+                                                        x{Math.round(assignment.weight * 100) / 100}   
+                                                    </span>
+                                                {/if}
+                                                {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
                                                     <!-- svelte-ignore node_invalid_placement_ssr -->
                                                     <button aria-label="Reset" on:click={() => {
                                                         if(assignment.percent != -1) {
-                                                            assignment.edit.score = assignment.weighted.score; 
-                                                            assignment.edit.total = assignment.weighted.total;
+                                                            assignment.edit.score = assignment.actual.score; 
+                                                            assignment.edit.total = assignment.actual.total;
                                                         } else {
                                                             assignment.edit.score = "";
-                                                            assignment.edit.total = assignment.weighted.total;
+                                                            assignment.edit.total = assignment.actual.total;
                                                         }
                                                     }} class="scale-75 mr-2 fill-black dark:fill-white -my-0.5">
                                                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
@@ -502,13 +506,13 @@
                                                 {/if}
                                             </div>
                                         {:else}
-                                            {#if assignment.percent == -1 && assignment.weighted.total == 0}
+                                            {#if assignment.percent == -1 && assignment.actual.total == 0}
                                                 - / -
                                             {:else}
-                                                {assignment.percent == -1 ? "-" : assignment.weighted.score}/{assignment.weighted.total}
-                                                {#if assignment.weighted.total != assignment.actual.total}
+                                                {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.acutal.total}
+                                                {#if assignment.weight != 1}
                                                     <span class="text-sm opacity-80 ml-0.5">
-                                                        ({assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total})      
+                                                        x{Math.round(assignment.weight * 100) / 100}   
                                                     </span>
                                                 {/if}
                                             {/if}
@@ -522,18 +526,23 @@
                                         {#if edit}
                                             <div class="flex items-center">
                                                 <div class="bg-black w-fit h-full dark:bg-white bg-opacity-10 dark:bg-opacity-10 rounded-md">
-                                                    <input bind:value={assignment.edit.score} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
-                                                    <input bind:value={assignment.edit.total} class="w-10 text-left mr-[0.22rem] bg-white bg-opacity-0">
+                                                    <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
+                                                    <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-white bg-opacity-0">
                                                 </div>
-                                                {#if ((assignment.edit.score != assignment.weighted.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.weighted.total }
+                                                {#if assignment.weight != 1}
+                                                    <span class="text-sm opacity-80 ml-1.5">
+                                                        x{Math.round(assignment.weight * 100) / 100}   
+                                                    </span>
+                                                {/if}
+                                                {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
                                                     <!-- svelte-ignore node_invalid_placement_ssr -->
                                                     <button aria-label="Reset" on:click={() => {
                                                         if(assignment.percent != -1) {
-                                                            assignment.edit.score = assignment.weighted.score; 
-                                                            assignment.edit.total = assignment.weighted.total;
+                                                            assignment.edit.score = assignment.actual.score; 
+                                                            assignment.edit.total = assignment.actual.total;
                                                         } else {
                                                             assignment.edit.score = "";
-                                                            assignment.edit.total = assignment.weighted.total;
+                                                            assignment.edit.total = assignment.actual.total;
                                                         }
                                                     }} class="scale-75 mr-2 fill-black dark:fill-white -my-0.5">
                                                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
@@ -541,13 +550,13 @@
                                                 {/if}
                                             </div>
                                         {:else}
-                                            {#if assignment.percent == -1 && assignment.weighted.total == 0}
+                                            {#if assignment.percent == -1 && assignment.actual.total == 0}
                                                 - / -
                                             {:else}
-                                                {assignment.percent == -1 ? "-" : assignment.weighted.score}/{assignment.weighted.total}
-                                                {#if assignment.weighted.total != assignment.actual.total}
+                                                {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
+                                                {#if assignment.weight != 1}
                                                     <span class="text-sm opacity-80 ml-0.5">
-                                                        ({assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total})      
+                                                        x{Math.round(assignment.weight * 100) / 100}   
                                                     </span>
                                                 {/if}
                                             {/if}
@@ -594,7 +603,7 @@
                         <div class="w-full px-4 text-left mt-2 flex bg-black dark:bg-white rounded-md bg-opacity-10 dark:bg-opacity-10 p-3">
                             {#if width > 1000}
                                 <p class="w-[40%]">
-                                    <input bind:value={assignment.name} placeholder="Untitled" class="w-full bg-white bg-opacity-0">
+                                    <input bind:value={assignment.name} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} placeholder="Untitled" class="w-full bg-white bg-opacity-0">
                                 </p>
                                 <div class="w-[15%]"></div>
                                 <div class="w-[15%]"></div>
@@ -603,8 +612,8 @@
                                 </p>
                                 <div class="w-[20%] pl-2 flex items-center justify-between">
                                     <div class="bg-black w-fit h-full flex dark:bg-white bg-opacity-10 dark:bg-opacity-10 rounded-md">
-                                        <input bind:value={assignment.edit.score} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
-                                        <input bind:value={assignment.edit.total} class="w-10 text-left mx-[0.22rem] bg-white bg-opacity-0">
+                                        <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
+                                        <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mx-[0.22rem] bg-white bg-opacity-0">
                                     </div>
                                     <button aria-label="Delete" on:click|preventDefault|stopPropagation={() => { category.assignments.splice(i, 1); categories = categories; }} class="scale-75 fill-black dark:fill-white -my-0.5">
                                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
@@ -612,7 +621,7 @@
                                 </div>
                             {:else if width > 800}
                                 <p class="w-1/3">
-                                    <input bind:value={assignment.name} placeholder="Untitled" class="w-full bg-white bg-opacity-0">
+                                    <input bind:value={assignment.name} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} placeholder="Untitled" class="w-full bg-white bg-opacity-0">
                                 </p>
                                 <div class="w-1/5"></div>
                                 <p class="w-1/6">
@@ -620,8 +629,8 @@
                                 </p>
                                 <div class="w-[30%] pl-2 flex items-center justify-between">
                                     <div class="bg-black w-fit h-full flex dark:bg-white bg-opacity-10 dark:bg-opacity-10 rounded-md">
-                                        <input bind:value={assignment.edit.score} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
-                                        <input bind:value={assignment.edit.total} class="w-10 text-left mx-[0.22rem] bg-white bg-opacity-0">
+                                        <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
+                                        <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mx-[0.22rem] bg-white bg-opacity-0">
                                     </div>
                                     <button aria-label="Delete" on:click|preventDefault|stopPropagation={() => { category.assignments.splice(i, 1); categories = categories; }} class="scale-75 fill-black dark:fill-white -my-0.5">
                                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
@@ -629,15 +638,15 @@
                                 </div>
                             {:else if width > 640}
                                 <p class="w-1/2">
-                                    <input bind:value={assignment.name} placeholder="Untitled" class="w-full bg-white bg-opacity-0">
+                                    <input bind:value={assignment.name} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} placeholder="Untitled" class="w-full bg-white bg-opacity-0">
                                 </p>
                                 <p class="w-1/6">
                                     {!assignment.edit.score || (assignment.edit.total == "0" || assignment.edit.total == 0) ? "" : (assignment.edit.score / assignment.edit.total * 100).toFixed(2) + "%"}
                                 </p>
                                 <div class="w-1/3 pl-2 flex items-center justify-between">
                                     <div class="bg-black w-fit h-full flex dark:bg-white bg-opacity-10 dark:bg-opacity-10 rounded-md">
-                                        <input bind:value={assignment.edit.score} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
-                                        <input bind:value={assignment.edit.total} class="w-10 text-left mx-[0.22rem] bg-white bg-opacity-0">
+                                        <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
+                                        <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mx-[0.22rem] bg-white bg-opacity-0">
                                     </div>
                                     <button aria-label="Delete" on:click|preventDefault|stopPropagation={() => { category.assignments.splice(i, 1); categories = categories; }} class="scale-75 fill-black dark:fill-white -my-0.5">
                                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
@@ -645,12 +654,12 @@
                                 </div>
                             {:else}
                                 <p class="w-[62%]">
-                                    <input bind:value={assignment.name} placeholder="Untitled" class="w-full bg-white bg-opacity-0">
+                                    <input bind:value={assignment.name} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} placeholder="Untitled" class="w-full bg-white bg-opacity-0">
                                 </p>
                                 <div class="w-[38%] pl-2 flex items-center justify-between">
                                     <div class="bg-black w-fit h-full flex dark:bg-white bg-opacity-10 dark:bg-opacity-10 rounded-md">
-                                        <input bind:value={assignment.edit.score} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
-                                        <input bind:value={assignment.edit.total} class="w-10 text-left mx-[0.22rem] bg-white bg-opacity-0">
+                                        <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-white bg-opacity-0">/
+                                        <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mx-[0.22rem] bg-white bg-opacity-0">
                                     </div>
                                     <button aria-label="Delete" on:click|preventDefault|stopPropagation={() => { category.assignments.splice(i, 1); categories = categories; }} class="scale-75 fill-black dark:fill-white -my-0.5">
                                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
@@ -665,7 +674,7 @@
                     {/if}
                 {/each}
                 {#if edit}
-                    <button on:click|preventDefault|stopPropagation={() => { category.assignments.push({ edit: { score: 0, total: 0 }, percent: -1, name: "", fake: true }); categories = categories; }} class="w-full px-4 text-left mt-2 flex gap-1 bg-black dark:bg-white rounded-md bg-opacity-10 dark:bg-opacity-10 p-3">
+                    <button on:click|preventDefault|stopPropagation={() => { category.assignments.push({ edit: { score: 0, total: 0 }, weight: 1, percent: -1, name: "", fake: true }); categories = categories; }} class="w-full px-4 text-left mt-2 flex gap-1 bg-black dark:bg-white rounded-md bg-opacity-10 dark:bg-opacity-10 p-3">
                         <div class="scale-[.85] fill-black dark:fill-white">
                             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                         </div>
