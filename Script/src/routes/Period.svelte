@@ -280,7 +280,7 @@
     <!-- Cannot use .grid since it will collide with another grid with class .grid aeries uses for dashboard. -->
     {#each categories as category, j}
         {#if category.fake == false || edit}
-            <div class="border-b z-5 sticky top-0 px-4 bg-white dark:bg-black border-border-light dark:border-border-dark border-gray-300 dark:border-gray-700 p-5 pt-4">
+            <div class="border-b z-[9] sticky top-0 px-4 bg-white dark:bg-black border-border-light dark:border-border-dark border-gray-300 dark:border-gray-700 p-5 pt-4">
                 <div class="mb-3 flex -ml-4 -mr-4 items-center justify-between h-8">
                     {#if edit}
                         <div class="flex items-center">
