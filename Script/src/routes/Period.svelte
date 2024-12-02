@@ -511,8 +511,8 @@
                                             {#if assignment.percent == -1 && assignment.actual.total == 0}
                                                 - / -
                                             {:else}
-                                                {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.acutal.total}
-                                                {#if assignment.weight != 1}
+                                                {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
+                                                {#if assignment.weight != 1 && assignment.actual.total != 0}
                                                     <span class="text-sm opacity-80 ml-0.5">
                                                         x{Math.round(assignment.weight * 100) / 100}   
                                                     </span>
