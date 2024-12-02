@@ -97,14 +97,16 @@
 
                     console.log(scores);
 
-                    if(scores.length < 7 || scores[1].trim() == "" || scores[1].trim() == "NA") {
+                    const missing = child.innerHTML.includes("background-color:#FF000");
+
+                    if(scores.length < 7 || (scores[1].trim() == "" && !missing) || scores[1].trim() == "NA") {
                         assignment.weight = 1;
                         assignment.actual = { score: 0, total: 0 };
                         assignment.edit = { score: null, total: 0 };
                         assignment.missing = false;
 
                         assignment.percent = -1;
-                    } else if(scores[1].trim() == "Missing") {
+                    } else if(scores[1].trim() == "Missing" || scores[1].trim() == "") {
                         assignment.weight = 1;
                         assignment.missing = true;
                         assignment.actual = { score: parseFloat(scores[5].trim()), total: 0 };

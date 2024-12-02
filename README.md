@@ -22,6 +22,7 @@ There is no seperate dev/prod command, extension must be built to be tested.
 0.1.1: Updated permissions so it only asks for aeries.net and not web history
 0.2.0: Changed weighted/actual score behavior, now only actual score is shown with multiplier
 0.2.1: Bug fix, multiplier on wrong z index
+0.2.2: Bug fix, missing assignments without missing keyword were identified as ungraded
 
 ## Testing
 
