@@ -2,10 +2,8 @@ An improved interface for viewing your grades on Aeries! See all your assignment
 
 ## Commands
 
-Install node v22: https://nodejs.org/en
-
-Package Manager: pnpm
-Install package manager using npm (installed with node): npm install -g pnpm
+1. Install node v22: https://nodejs.org/en
+2. Install package manager using npm (installed with node): npm install -g pnpm
 
 All commands are run from the root of the project, from a terminal: To run, first install dependencies, then build extension.
 
@@ -23,7 +21,7 @@ There is no seperate dev/prod command, extension must be built to be tested.
 - 0.2.0: Changed weighted/actual score behavior, now only actual score is shown with multiplier
 - 0.2.1: Bug fix, multiplier on wrong z index
 - 0.2.2: Bug fix, missing assignments without missing keyword were identified as ungraded
-- 0.2.3: Bug fix, misspelled variable.
+- 0.2.3: Bug fix, misspelled variable
 
 ## Testing
 
@@ -31,7 +29,7 @@ Here is how to test the extension:
 
 1. Go to aeries demo website: https://demo.aeries.net/AeriesTX/Login.aspx
 2. Click on the student link under the sign in button.
-3. Go through sign in page, then you will redirected to Aeries Student dashboard page.
+3. Go through the sign in page, then you will be redirected to Aeries Student dashboard page.
 4. Click on Go to Aeries Grades+ button to go to the grade viewer.
 
 ## How it works
