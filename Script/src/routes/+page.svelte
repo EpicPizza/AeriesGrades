@@ -7,8 +7,8 @@
 
     const started = writable(false);
 
-    const defaultKeywords = { keywords: "final", version: "0.3.0" };
-    export const settings = persisted('aeries-grades+-settings', { version: "0.3.0", zeros: "no", developer: "off", mode: "default", keywords: "final", edited: false });
+    const defaultKeywords = { keywords: "final", version: "0.3.2" };
+    export const settings = persisted('aeries-grades+-settings', { version: "0.3.2", zeros: "no", developer: "off", mode: "default", keywords: "final", edited: false });
 
     $: {
         if($settings.keywords != defaultKeywords.keywords && $settings.version == defaultKeywords.version) { 

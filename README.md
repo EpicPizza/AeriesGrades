@@ -39,6 +39,12 @@ There is no seperate dev/prod command, extension must be built to be tested.
 - When refreshing page, extension stores in url what class was loaded instead of just kicking you back to the main page.
 - Adjusted background colors.
 
+0.3.1:
+- Chrome Web Store roll back (accidently submitted extension without parts of the code...)
+
+0.3.2:
+- Fixed extension submission.
+
 ## Testing
 
 Here is how to test the extension:
