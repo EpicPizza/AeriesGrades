@@ -36,6 +36,7 @@ There is no seperate dev/prod command, extension must be built to be tested.
 - Final calculation detects if certain keywords are in the category name and displays a calculation of how many points or percent you need to get a certain grade (default 90).
 - Added simplified period name, grade, and buttons bar that sticks to the top.
 - Added error popup for when expected grade and actual grade do not match.
+- When refreshing page, extension stores in url what class was loaded instead of just kicking you back to the main page.
 - Adjusted background colors.
 
 ## Testing
