@@ -16,12 +16,27 @@ There is no seperate dev/prod command, extension must be built to be tested.
 
 ## Versions
 
-- 0.1.0: Intial version of extension
-- 0.1.1: Updated permissions so it only asks for aeries.net and not web history
-- 0.2.0: Changed weighted/actual score behavior, now only actual score is shown with multiplier
-- 0.2.1: Bug fix, multiplier on wrong z index
-- 0.2.2: Bug fix, missing assignments without missing keyword were identified as ungraded
-- 0.2.3: Bug fix, misspelled variable
+0.1.0: Intial version of extension.
+
+0.1.1: Updated permissions so it only asks for aeries.net and not web history.
+
+0.2.0: Changed weighted/actual score behavior, now only actual score is shown with multiplier.
+
+0.2.1: Bug fix, multiplier on wrong z index.
+
+0.2.2: Bug fix, missing assignments without missing keyword were identified as ungraded.
+
+0.2.3: Bug fix, misspelled variable.
+
+0.3.0: 
+- Added new settings menu which includes options for appearance, developer mode, marking zeros as missing, and final calculation keywords.
+- Apperance can now be changed between light, dark, and system in settings menu.
+- Enabling developer mode for now just reveals a hide extension button.
+- Marking zeros as missing (some teachers may give a zero instead of properly marking an assignment as missing).
+- Final calculation detects if certain keywords are in the category name and displays a calculation of how many points or percent you need to get a certain grade (default 90).
+- Added simplified period name, grade, and buttons bar that sticks to the top.
+- Added error popup for when expected grade and actual grade do not match.
+- Adjusted background colors.
 
 ## Testing
 

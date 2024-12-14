@@ -7,7 +7,7 @@ fs.readFile('./output.html', 'utf8', (err, data) => {
     return;
   }
 
-  const final = "<div class=\"w-full h-full\">" + data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>")) + "</div>";
+  const final = "<div id=\"aeriesgrades+main\" class=\"w-full h-full\">" + data.substring(data.indexOf("<body>") + 6, data.indexOf("</body>")) + "</div>";
 
   fs.readFile('../Extension/script.js', 'utf8', (err, code) => {
     if (err) {
@@ -18,8 +18,6 @@ fs.readFile('./output.html', 'utf8', (err, data) => {
     code = code.substring(code.indexOf("//--") + 4); 
 
     code = "//final\n\nconst final = '" + final.replace(data.substring(data.indexOf("<script>"), data.indexOf("</script>") + 9), "").replaceAll("\n", "\\n") + "';\n\n//--" + code;
-
-    console.log(data.substring(data.indexOf("<script>") + 8, data.indexOf("</script>")));
 
     code = code.replace(code.substring(code.indexOf("//final hydration"), code.lastIndexOf("//--") + 4), "//final hydration\n\n" + "---" + "\n\n//--");
 

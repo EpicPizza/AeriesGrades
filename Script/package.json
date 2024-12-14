@@ -17,6 +17,7 @@
 	},
 	"dependencies": {
 		"date-and-time": "^3.6.0",
-		"svelte-bundle": "^0.0.24"
+		"svelte-bundle": "^0.0.24",
+		"svelte-persisted-store": "^0.12.0"
 	}
 }
