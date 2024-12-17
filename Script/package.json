@@ -4,9 +4,9 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
 		"preview": "vite preview",
-		"devext": "nodemon --watch ./src --watch ./insert.js --exec \"svelte-bundle -i src/routes/+page.svelte -f && node insert\" -e json,ts,js,css,html,svelte"
+		"devext": "nodemon --watch ./src --watch ./insert.js --exec \"svelte-bundle -i src/routes/+page.svelte -f && node insert\" -e json,ts,js,css,html,svelte",
+		"build": "svelte-bundle -i src/routes/+page.svelte -f && node insert"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^3.0.0",

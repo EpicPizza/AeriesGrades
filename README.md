@@ -45,6 +45,14 @@ There is no seperate dev/prod command, extension must be built to be tested.
 0.3.2:
 - Fixed extension submission.
 
+0.3.3:
+- Completed fake final feature to test how many points you need if there were no assignments before hand.
+- Fixed bug where final calculation did not take into account fake assignments.
+
+0.3.4:
+- Fixed bug where error popup would show if you edited category weight.
+- Disabled settings temporally because of bugs causing it not to save properly.
+
 ## Testing
 
 Here is how to test the extension:
