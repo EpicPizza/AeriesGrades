@@ -53,6 +53,11 @@ There is no seperate dev/prod command, extension must be built to be tested.
 - Fixed bug where error popup would show if you edited category weight.
 - Disabled settings temporally because of bugs causing it not to save properly.
 
+0.4.0:
+- Added new grade history graph.
+- Fixed settings bug and is now able to save again.
+- Fixed bug where category would should 0% on non-edit mode if the only assignments in it were fake.
+
 ## Testing
 
 Here is how to test the extension:
