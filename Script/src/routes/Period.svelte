@@ -159,6 +159,12 @@
                     assignment.description = child.innerText;
                 }
 
+                if(child.style.cssText.includes("max-height: 50px;")) {
+                    const comments = child.innerHTML.split("<br>").filter((i) => i.replaceAll("\n", "").replaceAll("\t", "").trim() != "");
+
+                    assignment.comments = comments;
+                }
+
                 if(child.className.includes("RightSide") && 'innerText' in child) {
                     const scores = child.innerText.replaceAll("\t", "").replaceAll("\n\n", "\n").replaceAll("\n\n", "\n").replaceAll("\n\n", "\n").replaceAll("\n\n", "\n").replaceAll("\n\n", "\n").split("\n").filter((i) => i != '');
 
@@ -312,6 +318,7 @@
         }
 
         categories = categories;
+        console.log(categories);
         loading = false;
         check = 1;
     }
@@ -510,7 +517,7 @@
 
             </button>
 
-            <div transition:fade={{ duration: 100 }} class="fixed z-[9] p-6 {$settings.mode == 'dark' ? "bg-zinc-900" : $settings.mode == 'light' ? "bg-zinc-100" : "bg-zinc-100 dark:bg-zinc-900"} rounded-3xl max-w-[calc(100%-2rem)] w-[36rem] min-h-[24rem] max-h-[calc(100%-6rem)] top-[6.5rem] translate-x-1/2 overflow-auto" style="right: {width / 2}px;">
+            <div transition:fade={{ duration: 100 }} class="fixed z-[9] p-6 {$settings.mode == 'dark' ? "bg-zinc-900" : $settings.mode == 'light' ? "bg-zinc-100" : "bg-zinc-100 dark:bg-zinc-900"} rounded-3xl max-w-[calc(100%-2rem)] w-[36rem] min-h-[24rem] max-h-[calc(100%-6rem)] top-[6.5rem] translate-x-1/2 overflow-auto overflow-x-hidden" style="right: {width / 2}px;">
                 <p class="text-2xl font-bold mb-4">Graph</p>
 
                 {#if gradeHistory.length > 0}
@@ -642,23 +649,23 @@
 
             <div class="sticky w-full h-[3.25rem] z-[6] top-0 pt-4 {$settings.mode == 'dark' ? "bg-zinc-900" : $settings.mode == 'light' ? "bg-zinc-100" : "bg-zinc-100 dark:bg-zinc-900"}">
                 <div class="flex items-center justify-between h-full">
-                    <h1 class="text-2xl">{period.name}</h1>
+                    <h1 class="text-2xl whitespace-nowrap overflow-ellipsis overflow-hidden">{period.name}</h1>
                     <div class="flex items-center gap-2">
                         {#if $settings.developer == "on"}
-                            <button on:click|preventDefault={() => { disabled = !disabled; }} class="px-3.5 py-1 transition-all rounded-md  {$settings.mode == 'dark' ? "bg-opacity-10 bg-zinc-100"  : $settings.mode == 'light' ? "bg-opacity-10 bg-zinc-900" : "bg-opacity-10 dark:bg-opacity-10 bg-zinc-900 dark:bg-zinc-100"}">
+                            <button on:click|preventDefault={() => { disabled = !disabled; }} class="px-3.5 py-1 whitespace-nowrap transition-all rounded-md  {$settings.mode == 'dark' ? "bg-opacity-10 bg-zinc-100"  : $settings.mode == 'light' ? "bg-opacity-10 bg-zinc-900" : "bg-opacity-10 dark:bg-opacity-10 bg-zinc-900 dark:bg-zinc-100"}">
                                 <span class="hidden sm:inline mr-1">Hide</span>
                                 <div class="inline-block translate-y-0.5 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px"><path d="m177-120-57-57 184-183H200v-80h240v240h-80v-104L177-120Zm343-400v-240h80v104l183-184 57 57-184 183h104v80H520Z"/></svg>
                                 </div>
                             </button>
                         {/if}
-                        <button on:click|preventDefault={() => { graphOpen = !graphOpen; }} class="px-3.5 py-1 transition-all rounded-md  {$settings.mode == 'dark' ? "bg-opacity-10 bg-zinc-100"  : $settings.mode == 'light' ? "bg-opacity-10 bg-zinc-900" : "bg-opacity-10 dark:bg-opacity-10 bg-zinc-900 dark:bg-zinc-100"}">
+                        <button on:click|preventDefault={() => { graphOpen = !graphOpen; }} class="px-3.5 py-1 whitespace-nowrap transition-all rounded-md  {$settings.mode == 'dark' ? "bg-opacity-10 bg-zinc-100"  : $settings.mode == 'light' ? "bg-opacity-10 bg-zinc-900" : "bg-opacity-10 dark:bg-opacity-10 bg-zinc-900 dark:bg-zinc-100"}">
                             <span class="hidden sm:inline mr-1">Graph</span>
                             <div class="inline-block translate-y-0.5 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
                                 <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px"><path d="m105-399-65-47 200-320 120 140 160-260 120 180 135-214 65 47-198 314-119-179-152 247-121-141-145 233Zm475 159q42 0 71-29t29-71q0-42-29-71t-71-29q-42 0-71 29t-29 71q0 42 29 71t71 29ZM784-80 676-188q-21 14-45.5 21t-50.5 7q-75 0-127.5-52.5T400-340q0-75 52.5-127.5T580-520q75 0 127.5 52.5T760-340q0 26-7 50.5T732-244l108 108-56 56Z"/></svg>
                             </div>
                         </button>
-                        <button on:click|preventDefault={() => { edit = !edit; }} class="px-3.5 py-1 transition-all rounded-md  {$settings.mode == 'dark' ? (edit ? "text-black bg-zinc-100" : "bg-opacity-10 bg-zinc-100")  : $settings.mode == 'light' ? (edit ? "text-white bg-zinc-900" : "bg-opacity-10 bg-zinc-900") : (edit ? "text-white dark:text-black bg-zinc-900 dark:bg-zinc-100" : "bg-opacity-10 dark:bg-opacity-10 bg-zinc-900 dark:bg-zinc-100")}">
+                        <button on:click|preventDefault={() => { edit = !edit; }} class="px-3.5 py-1 whitespace-nowrap transition-all rounded-md  {$settings.mode == 'dark' ? (edit ? "text-black bg-zinc-100" : "bg-opacity-10 bg-zinc-100")  : $settings.mode == 'light' ? (edit ? "text-white bg-zinc-900" : "bg-opacity-10 bg-zinc-900") : (edit ? "text-white dark:text-black bg-zinc-900 dark:bg-zinc-100" : "bg-opacity-10 dark:bg-opacity-10 bg-zinc-900 dark:bg-zinc-100")}">
                             <span class="hidden sm:inline mr-1">Edit</span>
                             <div class="inline-block translate-y-0.5 {$settings.mode == 'dark' ? (edit ? "fill-black" : "fill-white") : $settings.mode == 'light' ? (edit ? "fill-white" : "fill-black") : (edit ? "fill-white dark:fill-black" : "fill-black dark:fill-white")}">
                                 <svg xmlns="http://www.w3.org/2000/svg" height="14px" viewBox="0 -960 960 960" width="14px"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
@@ -672,13 +679,13 @@
                                             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
                                         </div>
                                     {/if}
-                                    <p class="text-xl font-bold {
+                                    <p class="text-xl font-bold whitespace-nowrap overflow-ellipsis overflow-hidden {
                                     $settings.mode == 'dark' ? (period.edit >= 90 ? "text-green-400" : period.edit >= 80 ? "text-yellow-400" : period.edit >= 70 ? "text-orange-400" : period.edit > 0 ? "text-red-400" : "ext-white") : 
                                     $settings.mode == 'light' ? (period.edit >= 90 ? "text-green-700" : period.edit >= 80 ? "text-yellow-700" : period.edit >= 70 ? "text-orange-500" : period.edit > 0 ? "text-red-700" : "text-black") : 
                                     (period.edit >= 90 ? "text-green-700 dark:text-green-400" : period.edit >= 80 ? "text-yellow-700 dark:text-yellow-400" : period.edit >= 70 ? "text-orange-500 dark:text-orange-400" : period.edit > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">{Math.floor(period.edit * 100) / 100}%</p>
                                 </div>
                             {:else}
-                                <p class="text-xl font-bold {
+                                <p class="text-xl font-bold whitespace-nowrap overflow-ellipsis overflow-hidden {
                                 $settings.mode == 'dark' ? (period.grade >= 90 ? "text-green-400" : period.grade >= 80 ? "text-yellow-400" : period.grade >= 70 ? "text-orange-400" : period.grade > 0 ? "text-red-400" : "ext-white") : 
                                 $settings.mode == 'light' ? (period.grade >= 90 ? "text-green-700" : period.grade >= 80 ? "text-yellow-700" : period.grade >= 70 ? "text-orange-500" : period.grade > 0 ? "text-red-700" : "text-black") : 
                                 (period.grade >= 90 ? "text-green-700 dark:text-green-400" : period.grade >= 80 ? "text-yellow-700 dark:text-yellow-400" : period.grade >= 70 ? "text-orange-500 dark:text-orange-400" : period.grade > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">{period.letter} ({period.grade}%)</p>
@@ -1015,6 +1022,20 @@
                                             </div>
                                         {/if}
                                     </div>
+                                    {#if assignment.comments.length > 0}
+                                        <div class="w-full mt-2 flex items-start py-1.5 px-2 rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                                            <div class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} my-0.5">
+                                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M240-400h480v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM880-80 720-240H160q-33 0-56.5-23.5T80-320v-480q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v720ZM160-320h594l46 45v-525H160v480Zm0 0v-480 480Z"/></svg>
+                                            </div>
+                                            <div class="mb-1">
+                                                {#each assignment.comments as comment}
+                                                    <p class="mt-1">
+                                                        {comment}
+                                                    </p>
+                                                {/each}
+                                            </div>
+                                        </div>
+                                    {/if}
                                     {#if assignment.open}
                                         <div transition:slide>
                                             <div class="w-full h-2"></div>
@@ -1130,7 +1151,7 @@
                                         <div class="w-full h-[42.5px]"></div>
 
                                         <div class="{$settings.mode == 'dark' ? "bg-zinc-900" : $settings.mode == 'light' ? "bg-zinc-100" : "bg-zinc-100 dark:bg-zinc-900"} w-full absolute left-0 z-[1] bottom-0 rounded-md">
-                                            <button on:click|preventDefault|stopPropagation={() => { category.assignments.push({ edit: { score: "", total: 100 }, weight: 1, percent: -1, name: "Final", fake: true, final: true }); categories = categories; }} class="w-full px-4 text-left flex gap-1 {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-20" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-20" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-20 dark:bg-opacity-20"} p-3 rounded-md">
+                                            <button on:click|preventDefault|stopPropagation={() => { category.assignments.push({ edit: { score: "", total: 100 }, weight: 1, percent: -1, name: "Final", fake: true, final: true, comments: [] }); categories = categories; }} class="w-full px-4 text-left flex gap-1 {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-20" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-20" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-20 dark:bg-opacity-20"} p-3 rounded-md">
                                                 <div class="scale-[.85] {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
                                                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                                                 </div>
@@ -1144,7 +1165,7 @@
                             {/if}
                         {/each}
                         {#if edit}
-                            <button on:click|preventDefault|stopPropagation={() => { category.assignments.push({ edit: { score: 0, total: 0 }, weight: 1, percent: -1, name: "", fake: true }); categories = categories; }} class="w-full px-4 text-left mt-2 flex gap-1 {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} p-3 rounded-md">
+                            <button on:click|preventDefault|stopPropagation={() => { category.assignments.push({ edit: { score: 0, total: 0 }, weight: 1, percent: -1, name: "", fake: true, comments: [] }); categories = categories; }} class="w-full px-4 text-left mt-2 flex gap-1 {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} p-3 rounded-md">
                                 <div class="scale-[.85] {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                                 </div>

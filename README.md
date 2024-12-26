@@ -58,6 +58,10 @@ There is no seperate dev/prod command, extension must be built to be tested.
 - Fixed settings bug and is now able to save again.
 - Fixed bug where category would should 0% on non-edit mode if the only assignments in it were fake.
 
+0.4.1:
+- Fixed grade history graph overflow.
+- Status and comments are now recognized.
+
 ## Testing
 
 Here is how to test the extension:
