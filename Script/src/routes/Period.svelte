@@ -6,7 +6,7 @@
     import de from "date-and-time/locale/de";
     import { fade } from "svelte/transition";
 
-    const gradeHistory = [];
+    let gradeHistory = [];
 
     export let started;
     export let settings;
@@ -27,6 +27,8 @@
         email: "",
         slot: "",
         letter: "",
+        term: null,
+        number: null,
         grade: 0,
         edit: 0,
     }
@@ -37,61 +39,74 @@
 
     $: zeros = $settings.zeros == "yes";
 
-    async function start() {
+    async function start(emulated = false) {
         const url = new URL(location.href);
 
-        if(localStorage.getItem("navigating") != "true" && url.searchParams.get("class") == null && url.searchParams.get("slot") == null){
-            document.location.href = location.href.substring(0, location.href.lastIndexOf("/") + 1) + "GradebookSummary.aspx";
-            return;
-        } else if(url.searchParams.get("class") != null && url.searchParams.get("slot") != null) {
-            const select = document.getElementById("ctl00_MainContent_subGBS_dlGN");
+        if(emulated == false) {
+            if(localStorage.getItem("navigating") != "true" && url.searchParams.get("class") == null && url.searchParams.get("slot") == null){
+                document.location.href = location.href.substring(0, location.href.lastIndexOf("/") + 1) + "GradebookSummary.aspx";
+                return;
+            } else if((url.searchParams.get("class") != null && url.searchParams.get("slot") != null) || (url.searchParams.get("class") != null && url.searchParams.get("term") != null && url.searchParams.get("period") != null)) {
+                const select = document.getElementById("ctl00_MainContent_subGBS_dlGN");
 
-            let first = false;
+                let first = false;
 
-            for(let i = 0; i < select.options.length; i++) {
-                const option = select.options[i];
+                for(let i = 0; i < select.options.length; i++) {
+                    const option = select.options[i];
 
-                if(option.text.includes(url.searchParams.get("class")) && option.text.includes(url.searchParams.get("slot"))) {
+                    if((url.searchParams.get("class") != null && url.searchParams.get("slot") != null) && option.text.includes(url.searchParams.get("class")) && option.text.includes(url.searchParams.get("slot"))) {
 
-                    if(i == 0) {
-                        first = true;
-                    } else {
-                        select.value = option.value;
+                        if(i == 0) {
+                            first = true;
+                        } else {
+                            select.value = option.value;
+                        }
+                    }
+
+                    if((url.searchParams.get("class") != null && url.searchParams.get("term") != null && url.searchParams.get("period") != null) && option.text.includes(url.searchParams.get("class")) && option.text.includes(url.searchParams.get("period")) && option.text.includes(url.searchParams.get("term"))) {
+                        period.term = url.searchParams.get("term");
+                        period.number = url.searchParams.get("period");
+
+                        if(i == 0) {
+                            first = true;
+                        } else {
+                            select.value = option.value;
+                        }
                     }
                 }
+
+                if(!first) {
+                    const before = document.querySelectorAll(".Card").length == 0 ? 0 : document.querySelectorAll(".Card")[0].innerHTML;
+
+                    select.dispatchEvent(new Event('change'));
+
+                    const result = await new Promise((resolve) => {
+                        let cycles = 0;
+
+                        const interval = setInterval(() => {
+                            const cards = document.querySelectorAll(".Card");
+
+                            //console.log(cards, cards.length);
+
+                            //console.log(cards[0].innerText, before);
+
+                            if((cards.length > 0 && before == 0) || (cards.length > 0 && cards[0].innerHTML != before) || (cards.length == 0 && before != 0)) {
+                                resolve(true);
+                                clearInterval(interval);
+                            }
+
+                            cycles++;
+
+                            if(cycles > 50) {
+                                resolve(false);
+                                clearInterval(interval);
+                            }
+                        }, 100);
+                    });
+                }
+            } else if(localStorage.getItem("navigating") == "true") {
+                localStorage.setItem("navigating", "false");
             }
-
-            if(!first) {
-                const before = document.querySelectorAll(".Card").length == 0 ? 0 : document.querySelectorAll(".Card")[0].innerHTML;
-
-                select.dispatchEvent(new Event('change'));
-
-                const result = await new Promise((resolve) => {
-                    let cycles = 0;
-
-                    const interval = setInterval(() => {
-                        const cards = document.querySelectorAll(".Card");
-
-                        //console.log(cards, cards.length);
-
-                        //console.log(cards[0].innerText, before);
-
-                        if((cards.length > 0 && before == 0) || (cards.length > 0 && cards[0].innerHTML != before) || (cards.length == 0 && before != 0)) {
-                            resolve(true);
-                            clearInterval(interval);
-                        }
-
-                        cycles++;
-
-                        if(cycles > 50) {
-                            resolve(false);
-                            clearInterval(interval);
-                        }
-                    }, 100);
-                });
-            }
-        } else if(localStorage.getItem("navigating") == "true") {
-            localStorage.setItem("navigating", "false");
         }
 
         //ungodly scrapping
@@ -106,9 +121,11 @@
         period.teacher = period.teacher.replace(segment, segment.toUpperCase());
         period.email = document.querySelector('#ctl00_MainContent_subGBS_EMailTeacher').innerText;
 
-        url.searchParams.append("class", period.name);
-        url.searchParams.append("slot", period.slot.replaceAll("  ", " "));
-        history.replaceState({}, null, url.toString());
+        if(emulated == false && url.searchParams.get("class") == null) {
+            url.searchParams.set("class", period.name);
+            url.searchParams.set("slot", period.slot.replaceAll("  ", " "));
+            history.replaceState({}, null, url.toString());
+        }
 
         document.title = period.name;
 
@@ -238,6 +255,9 @@
         });
 
         if(document.querySelector("#ctl00_MainContent_subGBS_assignmentsView").children.length < 3) {
+            period.teacher = "Unknown";
+            period.email = "Unknown";
+
             loading = false;
             return;
         };
@@ -318,7 +338,6 @@
         }
 
         categories = categories;
-        console.log(categories);
         loading = false;
         check = 1;
     }
@@ -499,10 +518,115 @@
         return false;
     }
 
+    function getData(safe = true) {
+        const page = document.querySelector(".BackDrop");
+
+        let html = "";
+
+        for(let i = 0; i < page.children.length; i++) {
+            const child = page.children[i];
+
+            if(child.id != "sub-stu-top-all-wrapper") {
+                html += child.outerHTML;
+            }
+        }
+
+        if(safe) {
+            if(html.includes("Birth") || html.includes("Age") || html.includes("Ethnicity") || html.includes("Race")) {
+                alert("Unable to remove personal identifiable information.");
+
+                return -1;
+            }
+        }
+
+        const data = {
+            period: period,
+            categories: categories,
+            history: gradeHistory,
+            html: html,
+        }
+
+        return data;
+    }
+
+    function download() {
+        const data = getData(false);
+
+        const blob = new Blob([JSON.stringify(data, null, '\t')], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'grades.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
+
+    function upload() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                const data = JSON.parse(text);
+
+                const page = document.querySelector(".BackDrop");
+
+                page.innerHTML = data.html;
+
+                loading = true;
+
+                gradeHistory = [];
+
+                edit = false;
+
+                categories = [];
+
+                period = {
+                    name: "",
+                    teacher: "",
+                    email: "",
+                    slot: "",
+                    letter: "",
+                    grade: 0,
+                    edit: 0,
+                }
+
+                finalGrade = "90";
+
+                width = 0;
+
+                error = false;
+                check = 0;
+
+                expandError = false;
+                disabled = false;
+
+                height = 0;
+
+                graphOpen = false;
+
+                start(true);
+            }
+            reader.readAsText(file);
+        }
+        input.click();
+
+
+    }
+
     let height = 0;
 
     let graphOpen = false;
 </script>
+
+{#if !loading}
+    <div class="hidden" id="hook">{JSON.stringify({ period: period, categories: categories, history: gradeHistory })}</div>
+{/if}
 
 {#if disabled}
     <div class="p-4 {$settings.mode == 'dark' ? "bg-zinc-900 text-white" : $settings.mode == 'light' ? "bg-zinc-100 text-black" : "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white"} rounded-br-2xl">
@@ -1177,13 +1301,30 @@
             {/each}
 
             {#if edit}
-                <button on:click|preventDefault|stopPropagation={() => { categories.push({ name: "", edit: { weight: 0, points: 0, total: 0, percent: 0}, assignments: [], fake: true  }); categories = categories; }} class="w-full px-4 text-left mt-12 flex gap-1 {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} p-3 rounded-md">
+                <button on:click|preventDefault|stopPropagation={() => { categories.push({ name: "", edit: { weight: 0, points: 0, total: 0, percent: 0}, assignments: [], fake: true  }); categories = categories; }} class="w-full px-4 text-left mt-12 flex gap-1 {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} p-3 rounded-md mb-8">
                     <div class="scale-[.85] {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
                         <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M440-440H200v-80h240v-240h80v240h240v80H520v240h-80v-240Z"/></svg>
                     </div>
                     Add Category
                 </button>
             {/if}
+        {/if}
+
+        {#if $settings.developer == "on"}
+            <div class="flex gap-2">   
+                <button on:click|preventDefault={() => { download(); }} class="px-4 py-3 transition-all rounded-md  {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                    Download
+                    <div class="inline-block ml-1.5 translate-y-0.5 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
+                    </div>
+                </button>
+                <button on:click|preventDefault={() => { upload(); }} class="px-4 py-3 transition-all rounded-md  {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                    Emulate
+                    <div class="inline-block ml-1.5 translate-y-0.5 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px"><path d="M440-160v-326L336-382l-56-58 200-200 200 200-56 58-104-104v326h-80ZM160-600v-120q0-33 23.5-56.5T240-800h480q33 0 56.5 23.5T800-720v120h-80v-120H240v120h-80Z"/></svg>
+                    </div>
+                </button>
+            </div>
         {/if}
 
         <div class="flex justify-between">

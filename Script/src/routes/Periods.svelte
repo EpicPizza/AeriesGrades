@@ -37,6 +37,9 @@
                 }
             }
 
+            period.term = card.parentElement.parentElement.previousElementSibling.children[3].innerText;
+            period.number = card.parentElement.parentElement.previousElementSibling.children[4].innerText;
+
             for(let j = 0; j < card.children.length; j++) {
                 const child = card.children[j];
 
@@ -62,19 +65,20 @@
 
                 if(child.className.includes("TextHeading") && 'innerText' in child) {
                     period.name = child.innerText;
-
-                    child.id = "grabbing-eeeeeeeee-" + i;
-
-                    period.grabber = "grabbing-eeeeeeeee-" + i;
                 }
-
-                
 
                 if(child.className.includes("footer") && 'innerText' in child.children[1]) {
 
                     period.missing = parseInt(child.children[1].innerText);
                 }
             }
+
+            const url = new URL(location.href.substring(0, location.href.lastIndexOf("/") + 1) + "GradebookDetails.aspx");
+            url.searchParams.set("class", period.name);
+            url.searchParams.set("term", period.term);
+            url.searchParams.set("period", period.number);
+
+            period.url = url.toString();
 
             classes.push(period);
 
@@ -111,6 +115,8 @@
     
     //{settings.mode == 'dark' ? "" : $settings.mode == 'light' ? "" : ""}
 </script>
+
+<div class="hidden" id="hook">{JSON.stringify({ periods: classes })}</div>
 
 <div class="p-8 {$settings.mode == 'dark' ? "bg-zinc-900 text-white" : $settings.mode == 'light' ? "bg-zinc-100 text-black" : "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white"}  h-full w-full relative">
     <div class="mb-4 flex items-start justify-between">
@@ -187,7 +193,7 @@
                 {/if}
             </div>
 
-            <p class="mt-2 text-right text-sm opacity-75">Version 0.4.1</p>
+            <p class="mt-2 text-right text-sm opacity-75">Version 0.4.2</p>
         
             <button aria-label="Close Settings" on:click|preventDefault={() => { settingsOpen = false }} class="p-1 transition-all rounded-full {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} absolute top-6 right-6">
                 <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
@@ -205,7 +211,7 @@
         <!-- Cannot use .grid since it will collide with another grid with class .grid aeries uses for dashboard. -->
         <div bind:this={grid} style="display: grid;" class="grid-cols-1 mb-6 md:grid-cols-2 lg:grid-cols-3 gap-3 w-full">
             {#each classes as period, i}
-                <button bind:this={periods[i]} on:click|preventDefault|stopPropagation={() => { localStorage.setItem('navigating', true); document.getElementById(period.grabber).click(); }} class="{$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} rounded-lg p-6 w-full flex gap-2 text-left">
+                <a bind:this={periods[i]} href={period.url} class="{$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} rounded-lg p-6 w-full flex gap-2 text-left">
                     <div class="w-full">
                         <p class="text-xl mb-2">{period.name}</p>
                         <p class="opacity-75 mb-1">{period.teacher}</p>
@@ -220,7 +226,7 @@
                             <p class="text-lg font-bold">{period.grade}</p>
                         </div>
                     </div>
-                </button>
+                </a>
             {/each}
         </div>
     {/each}
