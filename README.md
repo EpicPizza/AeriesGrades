@@ -67,6 +67,9 @@ There is no seperate dev/prod command, extension must be built to be tested.
 - Developer mode feature added that allows data to be downloaded and uploaded for testing.
 - Hidden elements added with stringified data to allow for scraping by other applications.
 
+0.4.3:
+- Classes with unweighted categories are now supported.
+
 ## Testing
 
 Here is how to test the extension:

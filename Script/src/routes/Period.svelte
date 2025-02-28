@@ -5,6 +5,7 @@
     import LineChart from './Graph/LineChart.svelte';
     import de from "date-and-time/locale/de";
     import { fade } from "svelte/transition";
+    import { now } from "d3";
 
     let gradeHistory = [];
 
@@ -20,6 +21,8 @@
     let edit = false;
 
     let categories = [];
+
+    let noWeight = 0;
 
     let period = {
         name: "",
@@ -266,21 +269,28 @@
 
         for(let i = 0; i < table.length; i++) {
             const row = table[i]; 
+            
+
+            if(row.children[0].innerText.trim() == "Category" && row.children[1].innerText.trim() == "Points") {
+                noWeight = 1;
+            }
 
             if(!row.id.includes("MainContent_subGBS_DataSummary")) continue;
 
             if(row.children[0].innerText.trim() == "Total") {
-                period.letter = row.children[5].innerText.trim();
-                period.grade = parseFloat(row.children[4].innerText.trim().substring(0, row.children[4].innerText.length - 1));
-                period.edit = parseFloat(row.children[4].innerText.trim().substring(0, row.children[4].innerText.length - 1));;
+                period.letter = row.children[5 - noWeight].innerText.trim();
+                period.grade = parseFloat(row.children[4 - noWeight].innerText.trim().substring(0, row.children[4 - noWeight].innerText.length - 1));
+                period.edit = parseFloat(row.children[4 - noWeight].innerText.trim().substring(0, row.children[4 - noWeight].innerText.length - 1));;
+
+                console.log(period);
             } else {
                 const category = {
                     name: row.children[0].innerText.trim(),
-                    weight: parseFloat(row.children[1].innerText.trim().substring(0, row.children[1].innerText.trim().length - 1)),
-                    points: parseFloat(row.children[2].innerText.trim()),
-                    total: parseFloat(row.children[3].innerText.trim()),
-                    percent: parseFloat(row.children[4].innerText.trim().substring(0, row.children[4].innerText.trim().length - 1)),
-                    letter: row.children[5].innerText.trim(),
+                    weight: noWeight ? -1 : parseFloat(row.children[1].innerText.trim().substring(0, row.children[1 - noWeight].innerText.trim().length - 1)),
+                    points: parseFloat(row.children[2 - noWeight].innerText.trim()),
+                    total: parseFloat(row.children[3 - noWeight].innerText.trim()),
+                    percent: parseFloat(row.children[4 - noWeight].innerText.trim().substring(0, row.children[4 - noWeight].innerText.trim().length - 1)),
+                    letter: row.children[5 - noWeight].innerText.trim(),
                     assignments: sorting.get(row.children[0].innerText.trim()) ?? new Array(),
                     fake: false,
                 };
@@ -343,8 +353,8 @@
     }
 
     function calculateGrade(assignments, categories) {
-        let percent = 0;
-        let totalPercent = 0;
+        let overallCredit = 0; //renamed from percent since it can be used to count points in non-weighted classes
+        let overallTotal = 0;
 
         categories.forEach((category, i) => {
             let points = 0;
@@ -363,15 +373,20 @@
 
             const weight = parseFloat(category.edit.weight);
 
-            if(total != 0) {
-                percent += (points / total) * (weight / 100);
-                totalPercent += (weight / 100);
+            if(noWeight == 0) {
+                if(total != 0) {
+                    overallCredit += (points / total) * (weight / 100);
+                    overallTotal += (weight / 100);
+                }
+            } else {
+                overallCredit += points;
+                overallTotal += total;
             }
         })
         
-        if(totalPercent == 0) return -1;
+        if(overallTotal == 0) return -1;
 
-        return (percent / totalPercent) * 100;
+        return (overallCredit / overallTotal) * 100;
     }
 
     let width = 0;
@@ -380,8 +395,8 @@
     let check = 0;
 
     $: {
-        let percent = 0;
-        let totalPercent = 0;
+        let overallCredit = 0; //renamed from percent since it can be used to count points in non-weighted classes
+        let overallTotal = 0;
 
         categories.forEach((category, i) => {
             let points = 0;
@@ -403,13 +418,18 @@
 
             const weight = parseFloat(category.edit.weight);
 
-            if(total != 0) {
-                percent += (points / total) * (weight / 100);
-                totalPercent += (weight / 100);
+            if(noWeight == 0) {
+                if(total != 0) {
+                    overallCredit += (points / total) * (weight / 100);
+                    overallTotal += (weight / 100);
+                }
+            } else {
+                overallCredit += points;
+                overallTotal += total;
             }
         })
 
-        period.edit = (percent / totalPercent) * 100;
+        period.edit = (overallCredit / overallTotal) * 100;
 
         if(check == 1) {
             error = Math.floor(period.edit * 100) / 100 != period.grade;
@@ -442,11 +462,15 @@
             return "(Invalid)"
         }
 
-        let percent = 0;
+        let percent = 0; //Used if just weighted
         let totalPercent = 0;
         let neededPercent = 0;
-        let neededPoints = 0;
         let neededWeight = 0;
+
+        let neededPoints = 0; //Either
+
+        let overallPoints = 0; //Used if unweighted
+        let overallTotal = 0;
 
         categories.forEach((category, i) => {
             let points = 0;
@@ -478,20 +502,36 @@
 
             const weight = edit ? parseFloat(category.edit.weight) : parseFloat(category.weight);
 
-            if(category.name == name) {
-                totalPercent += (weight / 100);
-                neededPoints = total;
-                neededWeight = (weight / 100);
-            } else if(total != 0) {
-                percent += (points / total) * (weight / 100);
-                totalPercent += (weight / 100);
-            } else if(category.name != name) {
-                percent += (weight / 100);
-                totalPercent += (weight / 100);
+            if(noWeight == 0) {
+                if(category.name == name) {
+                    totalPercent += (weight / 100);
+                    neededPoints = total;
+                    neededWeight = (weight / 100);
+                } else if(total != 0) {
+                    percent += (points / total) * (weight / 100);
+                    totalPercent += (weight / 100);
+                } else if(category.name != name) {
+                    percent += (weight / 100);
+                    totalPercent += (weight / 100);
+                }
+            } else {
+                if(category.name == name) {
+                    neededPoints = total;
+                    overallTotal += total;
+                } else if(category.name != name) {
+                    overallPoints += points;
+                    overallTotal += total;
+                }
             }
         });
 
-        neededPercent = (((parseFloat(finalGrade) / 100) * totalPercent) - percent) / neededWeight;
+        console.table({ overallPoints, overallTotal, neededPoints });
+
+        if(noWeight == 0) {
+            neededPercent = (((parseFloat(finalGrade) / 100) * totalPercent) - percent) / neededWeight;
+        } else {
+            neededPercent = (((parseFloat(finalGrade) / 100) - (overallPoints / overallTotal)) * overallTotal) / neededPoints;
+        }
 
         if(neededPoints == 0) {
             return Math.ceil(neededPercent * 100) + "%";
@@ -603,6 +643,8 @@
                 error = false;
                 check = 0;
 
+                noWeight = 0;
+
                 expandError = false;
                 disabled = false;
 
@@ -696,6 +738,18 @@
                 </button>
             </div>
         </div>
+
+        {#if noWeight} 
+            <div class="mt-6 w-full bg-blue-500 bg-opacity-30 px-5 py-4 rounded-md flex items-start">
+                <div class="scale-75 mr-3 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 -960 960 960" width="36px"><path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+                </div>
+                <div class="mr-2">
+                    <p class="font-bold text-lg mb-1">No Category Weighting</p>
+                    <p>Grade will be calculated with no weighting.</p>
+                </div>
+            </div>
+        {/if}
 
         {#if error}
             <div class="mt-6 w-full bg-red-500 bg-opacity-30 px-5 py-4 rounded-md flex items-start">
@@ -829,12 +883,14 @@
                                 <div class="flex items-center">
                                     <h1 class="text-xl font-extrabold tracking-wide">
                                         {#if category.fake}
-                                            <input bind:value={category.name} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} placeholder="Untitled" class="w-48 px-2 rounded-md py-1 -my-1 mr-1 text-left {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">(
+                                            <input bind:value={category.name} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} placeholder="Untitled" class="w-48 px-2 rounded-md py-1 -my-1 mr-1 text-left {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
                                         {:else}
-                                            {category.name} (
+                                            {category.name + " "}
                                         {/if}
-                                        <input bind:value={category.edit.weight} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-16 px-2 rounded-md py-1 -my-1 text-center {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
-                                    %)</h1>
+                                        {#if noWeight == 0}
+                                            (<input bind:value={category.edit.weight} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-16 px-2 rounded-md py-1 -my-1 text-center {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">%)
+                                        {/if}
+                                    </h1>
                                     {#if category.fake}
                                         <button aria-label="Delete" on:click|preventDefault|stopPropagation={() => { categories.splice(j, 1); categories = categories; }} class="scale-75 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} -my-0.5">
                                             <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M280-120q-33 0-56.5-23.5T200-200v-520h-40v-80h200v-40h240v40h200v80h-40v520q0 33-23.5 56.5T680-120H280Zm400-600H280v520h400v-520ZM360-280h80v-360h-80v360Zm160 0h80v-360h-80v360ZM280-720v520-520Z"/></svg>
@@ -846,13 +902,25 @@
                                     {/if}
                                 </div>
                             {:else}
-                                <h1 class="text-xl font-extrabold tracking-wide">{category.name} ({category.weight}%)</h1>
+                                {#if noWeight == 0}
+                                    <h1 class="text-xl font-extrabold tracking-wide">{category.name} ({category.weight}%)</h1>
+                                {:else}
+                                    <h1 class="text-xl font-extrabold tracking-wide">{category.name}</h1>
+                                {/if}
                             {/if}
                             <div class="text-right">
                                 {#if isNaN(category.edit.percent) || (category.assignments.filter(assignment => assignment.fake == true).length == category.assignments.length && !edit)}
-                                    <p class="text-lg font-bold">No Grade</p>
+                                    {#if noWeight == 0}
+                                        <p class="text-lg font-bold">No Grade</p>
+                                    {:else}
+                                        <p class="text-lg font-bold">No Points</p>
+                                    {/if}
                                 {:else if category.edit.total == 0}
-                                    <p class="text-lg font-bold">Invalid</p>
+                                    {#if noWeight == 0}
+                                        <p class="text-lg font-bold">Invalid</p>
+                                    {:else}
+                                        <p class="text-lg font-bold">Extra Credit Only</p>
+                                    {/if}
                                 {:else}
                                     {#if edit}
                                         <div class="flex items-center">

@@ -6,11 +6,11 @@
 
     const started = writable(false);
 
-    const defaultKeywords = { keywords: "final", version: "0.4.2" };
+    const defaultKeywords = { keywords: "final", version: "0.4.3" };
     export const settings = getSettings();
 
     function getSettings() {
-        const { set, subscribe, update } = writable({ version: "0.4.2", zeros: "no", developer: "off", mode: "default", keywords: "final", edited: false });
+        const { set, subscribe, update } = writable({ version: "0.4.3", zeros: "no", developer: "off", mode: "default", keywords: "final", edited: false });
         
         function init() {
             const saved = localStorage.getItem("aeries-grades+-settings");
