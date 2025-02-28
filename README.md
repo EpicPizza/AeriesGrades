@@ -70,6 +70,9 @@ There is no seperate dev/prod command, extension must be built to be tested.
 0.4.3:
 - Classes with unweighted categories are now supported.
 
+0.4.4:
+- Slightly tweaked interface for classes with unweighted categories.
+
 ## Testing
 
 Here is how to test the extension:

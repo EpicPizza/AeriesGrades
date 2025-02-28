@@ -193,7 +193,7 @@
                 {/if}
             </div>
 
-            <p class="mt-2 text-right text-sm opacity-75">Version 0.4.3</p>
+            <p class="mt-2 text-right text-sm opacity-75">Version 0.4.4</p>
         
             <button aria-label="Close Settings" on:click|preventDefault={() => { settingsOpen = false }} class="p-1 transition-all rounded-full {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} absolute top-6 right-6">
                 <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
