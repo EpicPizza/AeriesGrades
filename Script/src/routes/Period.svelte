@@ -429,7 +429,11 @@
             }
         })
 
-        period.edit = (overallCredit / overallTotal) * 100;
+        if(overallTotal == 0) {
+            period.edit = 0;
+        } else {
+            period.edit = (overallCredit / overallTotal) * 100;
+        }
 
         if(check == 1) {
             error = Math.floor(period.edit * 100) / 100 != period.grade;
@@ -524,6 +528,10 @@
                 }
             }
         });
+
+        if(noWeight == 1 && overallTotal == 0) {
+            return "Infinity";
+        }
 
         console.table({ overallPoints, overallTotal, neededPoints });
 
@@ -801,14 +809,14 @@
                             {/if}
                             <p class="text-2xl font-bold {
                             $settings.mode == 'dark' ? (period.edit >= 90 ? "text-green-400" : period.edit >= 80 ? "text-yellow-400" : period.edit >= 70 ? "text-orange-400" : period.edit > 0 ? "text-red-400" : "ext-white") : 
-                            $settings.mode == 'light' ? (period.edit >= 90 ? "text-green-700" : period.edit >= 80 ? "text-yellow-700" : period.edit >= 70 ? "text-orange-500" : period.edit > 0 ? "text-red-700" : "text-black") : 
-                            (period.edit >= 90 ? "text-green-700 dark:text-green-400" : period.edit >= 80 ? "text-yellow-700 dark:text-yellow-400" : period.edit >= 70 ? "text-orange-500 dark:text-orange-400" : period.edit > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">{Math.floor(period.edit * 100) / 100}%</p>
+                            $settings.mode == 'light' ? (period.edit >= 90 ? "text-green-700" : period.edit >= 80 ? "text-yellow-700" : period.edit >= 70 ? "text-orange-700" : period.edit > 0 ? "text-red-700" : "text-black") : 
+                            (period.edit >= 90 ? "text-green-700 dark:text-green-400" : period.edit >= 80 ? "text-yellow-700 dark:text-yellow-400" : period.edit >= 70 ? "text-orange-700 dark:text-orange-400" : period.edit > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">{Math.floor(period.edit * 100) / 100}%</p>
                         </div>
                     {:else}
                         <p class="text-2xl font-bold {
                         $settings.mode == 'dark' ? (period.grade >= 90 ? "text-green-400" : period.grade >= 80 ? "text-yellow-400" : period.grade >= 70 ? "text-orange-400" : period.grade > 0 ? "text-red-400" : "ext-white") : 
-                        $settings.mode == 'light' ? (period.grade >= 90 ? "text-green-700" : period.grade >= 80 ? "text-yellow-700" : period.grade >= 70 ? "text-orange-500" : period.grade > 0 ? "text-red-700" : "text-black") : 
-                        (period.grade >= 90 ? "text-green-700 dark:text-green-400" : period.grade >= 80 ? "text-yellow-700 dark:text-yellow-400" : period.grade >= 70 ? "text-orange-500 dark:text-orange-400" : period.grade > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">{period.letter} ({period.grade}%)</p>
+                        $settings.mode == 'light' ? (period.grade >= 90 ? "text-green-700" : period.grade >= 80 ? "text-yellow-700" : period.grade >= 70 ? "text-orange-700" : period.grade > 0 ? "text-red-700" : "text-black") : 
+                        (period.grade >= 90 ? "text-green-700 dark:text-green-400" : period.grade >= 80 ? "text-yellow-700 dark:text-yellow-400" : period.grade >= 70 ? "text-orange-700 dark:text-orange-400" : period.grade > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">{period.letter} ({period.grade}%)</p>
                     {/if}   
                 </div>
 
@@ -859,14 +867,14 @@
                                     {/if}
                                     <p class="text-xl font-bold whitespace-nowrap overflow-ellipsis overflow-hidden {
                                     $settings.mode == 'dark' ? (period.edit >= 90 ? "text-green-400" : period.edit >= 80 ? "text-yellow-400" : period.edit >= 70 ? "text-orange-400" : period.edit > 0 ? "text-red-400" : "ext-white") : 
-                                    $settings.mode == 'light' ? (period.edit >= 90 ? "text-green-700" : period.edit >= 80 ? "text-yellow-700" : period.edit >= 70 ? "text-orange-500" : period.edit > 0 ? "text-red-700" : "text-black") : 
-                                    (period.edit >= 90 ? "text-green-700 dark:text-green-400" : period.edit >= 80 ? "text-yellow-700 dark:text-yellow-400" : period.edit >= 70 ? "text-orange-500 dark:text-orange-400" : period.edit > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">{Math.floor(period.edit * 100) / 100}%</p>
+                                    $settings.mode == 'light' ? (period.edit >= 90 ? "text-green-700" : period.edit >= 80 ? "text-yellow-700" : period.edit >= 70 ? "text-orange-700" : period.edit > 0 ? "text-red-700" : "text-black") : 
+                                    (period.edit >= 90 ? "text-green-700 dark:text-green-400" : period.edit >= 80 ? "text-yellow-700 dark:text-yellow-400" : period.edit >= 70 ? "text-orange-700 dark:text-orange-400" : period.edit > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">{Math.floor(period.edit * 100) / 100}%</p>
                                 </div>
                             {:else}
                                 <p class="text-xl font-bold whitespace-nowrap overflow-ellipsis overflow-hidden {
                                 $settings.mode == 'dark' ? (period.grade >= 90 ? "text-green-400" : period.grade >= 80 ? "text-yellow-400" : period.grade >= 70 ? "text-orange-400" : period.grade > 0 ? "text-red-400" : "ext-white") : 
-                                $settings.mode == 'light' ? (period.grade >= 90 ? "text-green-700" : period.grade >= 80 ? "text-yellow-700" : period.grade >= 70 ? "text-orange-500" : period.grade > 0 ? "text-red-700" : "text-black") : 
-                                (period.grade >= 90 ? "text-green-700 dark:text-green-400" : period.grade >= 80 ? "text-yellow-700 dark:text-yellow-400" : period.grade >= 70 ? "text-orange-500 dark:text-orange-400" : period.grade > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">{period.letter} ({period.grade}%)</p>
+                                $settings.mode == 'light' ? (period.grade >= 90 ? "text-green-700" : period.grade >= 80 ? "text-yellow-700" : period.grade >= 70 ? "text-orange-700" : period.grade > 0 ? "text-red-700" : "text-black") : 
+                                (period.grade >= 90 ? "text-green-700 dark:text-green-400" : period.grade >= 80 ? "text-yellow-700 dark:text-yellow-400" : period.grade >= 70 ? "text-orange-700 dark:text-orange-400" : period.grade > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">{period.letter} ({period.grade}%)</p>
                             {/if}  
                         </div>
                     </div> 
@@ -915,11 +923,18 @@
                                     {:else}
                                         <p class="text-lg font-bold">No Points</p>
                                     {/if}
-                                {:else if category.edit.total == 0}
+                                {:else if category.edit.total == 0 || (category.total == 0 && category.points > 0 && noWeight == 1 && edit == false)}
                                     {#if noWeight == 0}
                                         <p class="text-lg font-bold">Invalid</p>
                                     {:else}
-                                        <p class="text-lg font-bold">Extra Credit Only</p>
+                                        <div class="flex items-center">
+                                            {#if category.edit.points != category.points}
+                                                <div class="scale-[.65] {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M200-200h57l391-391-57-57-391 391v57Zm-80 80v-170l528-527q12-11 26.5-17t30.5-6q16 0 31 6t26 18l55 56q12 11 17.5 26t5.5 30q0 16-5.5 30.5T817-647L290-120H120Zm640-584-56-56 56 56Zm-141 85-28-29 57 57-29-28Z"/></svg>
+                                                </div>
+                                            {/if}
+                                            <p class="text-lg font-bold">Extra Credit ({category.edit.points})</p>
+                                        </div>
                                     {/if}
                                 {:else}
                                     {#if edit}
@@ -931,16 +946,16 @@
                                             {/if}
                                             <p class="text-lg font-bold {
                                             $settings.mode == 'dark' ? (category.edit.percent >= 90 ? "text-green-400" : category.edit.percent >= 80 ? "text-yellow-400" : category.edit.percent >= 70 ? "text-orange-400" : category.edit.percent > 0 ? "text-red-400" : "ext-white") : 
-                                            $settings.mode == 'light' ? (category.edit.percent >= 90 ? "text-green-700" : category.edit.percent >= 80 ? "text-yellow-700" : category.edit.percent >= 70 ? "text-orange-500" : category.edit.percent > 0 ? "text-red-700" : "text-black") : 
-                                            (category.edit.percent >= 90 ? "text-green-700 dark:text-green-400" : category.edit.percent >= 80 ? "text-yellow-700 dark:text-yellow-400" : category.edit.percent >= 70 ? "text-orange-500 dark:text-orange-400" : category.edit.percent > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">
+                                            $settings.mode == 'light' ? (category.edit.percent >= 90 ? "text-green-700" : category.edit.percent >= 80 ? "text-yellow-700" : category.edit.percent >= 70 ? "text-orange-700" : category.edit.percent > 0 ? "text-red-700" : "text-black") : 
+                                            (category.edit.percent >= 90 ? "text-green-700 dark:text-green-400" : category.edit.percent >= 80 ? "text-yellow-700 dark:text-yellow-400" : category.edit.percent >= 70 ? "text-orange-700 dark:text-orange-400" : category.edit.percent > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">
                                                 {Math.floor(category.edit.percent * 100) / 100}% ({Math.floor(category.edit.points * 100) / 100}/{Math.floor(category.edit.total * 100) / 100})
                                             </p>
                                         </div>
                                     {:else}     
                                         <p class="text-lg font-bold {
                                         $settings.mode == 'dark' ? (category.percent >= 90 ? "text-green-400" : category.percent >= 80 ? "text-yellow-400" : category.percent >= 70 ? "text-orange-400" : category.percent > 0 ? "text-red-400" : "ext-white") : 
-                                        $settings.mode == 'light' ? (category.percent >= 90 ? "text-green-700" : category.percent >= 80 ? "text-yellow-700" : category.percent >= 70 ? "text-orange-500" : category.percent > 0 ? "text-red-700" : "text-black") : 
-                                        (category.percent >= 90 ? "text-green-700 dark:text-green-400" : category.percent >= 80 ? "text-yellow-700 dark:text-yellow-400" : category.percent >= 70 ? "text-orange-500 dark:text-orange-400" : category.percent > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">
+                                        $settings.mode == 'light' ? (category.percent >= 90 ? "text-green-700" : category.percent >= 80 ? "text-yellow-700" : category.percent >= 70 ? "text-orange-700" : category.percent > 0 ? "text-red-700" : "text-black") : 
+                                        (category.percent >= 90 ? "text-green-700 dark:text-green-400" : category.percent >= 80 ? "text-yellow-700 dark:text-yellow-400" : category.percent >= 70 ? "text-orange-700 dark:text-orange-400" : category.percent > 0 ? "text-red-700 dark:text-red-400" : "text-black dark:text-white")}">
                                             {category.percent}% ({category.points}/{category.total})
                                         </p>
                                     {/if}

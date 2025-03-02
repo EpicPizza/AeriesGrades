@@ -3,14 +3,15 @@
     import Periods from "./Periods.svelte";
     import Period from "./Period.svelte";
     import { fade } from "svelte/transition";
+    import Dashboard from "./Dashboard.svelte";
 
     const started = writable(false);
 
-    const defaultKeywords = { keywords: "final", version: "0.4.4" };
+    const defaultKeywords = { keywords: "final", version: "0.5.0" };
     export const settings = getSettings();
 
     function getSettings() {
-        const { set, subscribe, update } = writable({ version: "0.4.4", zeros: "no", developer: "off", mode: "default", keywords: "final", edited: false });
+        const { set, subscribe, update } = writable({ version: "0.5.0", zeros: "no", developer: "off", mode: "default", keywords: "final", edited: false });
         
         function init() {
             const saved = localStorage.getItem("aeries-grades+-settings");
@@ -48,7 +49,11 @@
     let current = "";
 
     function start() {
-        current = document.querySelector(".AeriesFullPageParentNavSubLinkMenu > .CurrentPage").innerText;
+        if(document.location.href.includes("Dashboard.aspx")) {
+            current = "Dashboard";
+        } else {
+            current = document.querySelector(".AeriesFullPageParentNavSubLinkMenu > .CurrentPage").innerText;
+        }
 
         $started = true;
 
@@ -102,4 +107,6 @@
     <Periods started={started} {defaultKeywords} {settings}></Periods>
 {:else if current == "Gradebook Details"}
     <Period started={started} {settings}></Period>
+{:else if current == "Dashboard"}
+    <Dashboard started={started} {settings}></Dashboard>
 {/if}

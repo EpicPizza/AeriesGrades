@@ -73,6 +73,10 @@ There is no seperate dev/prod command, extension must be built to be tested.
 0.4.4:
 - Slightly tweaked interface for classes with unweighted categories.
 
+0.5.0:
+- Aeries Grades+ now shows current terms on main page.
+- Bug with unweighted categories, calculates NaN with 0 points.
+
 ## Testing
 
 Here is how to test the extension:

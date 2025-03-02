@@ -11,14 +11,20 @@ document.getElementById("NavSubGradebook Details").className += " hidden";
 const classes = document.querySelector(".classesSection");
 
 if(classes) {
-    classes.classList.add("hidden");
-    
-    const element = document.createElement("a");
-    element.href = location.href.substring(0, location.href.lastIndexOf("/") + 1) + "GradebookSummary.aspx";
-    element.innerText = "Go to Aeries Grades+";
-    element.style = "display: block; padding-top: 1rem !important; padding-bottom: 1rem; padding-left: 2rem; padding-right: 2rem; background-color: black; color: white !important; text-decoration: none; border-radius: 0.5rem;"
-    
-    classes.insertAdjacentElement("afterend", element);
+    if (classes.classList.contains('classesSection')) {
+        classes.classList.remove('classesSection');
+        classes.classList.add("gradesPlusSection")
+    }
+
+    while (classes.firstChild) {
+        classes.removeChild(classes.firstChild);
+    }
+
+    console.log(classes);
+     
+    classes.innerHTML = final;
+
+    console.log(classes);
 } else {
     const main = document.querySelector("#AeriesFullPageContent");
 
@@ -28,18 +34,20 @@ if(classes) {
         main.insertAdjacentHTML('beforebegin', final);
         main.className += " absolute z-[-1] max-h-[10px] hidden";
     
+    } else {
+        console.log("not found");
+    }
+}
+
 //final hydration
 
 
 
 //--
 
-    document.getElementById("#start").click();
+document.getElementById("#start").click();
 
-    } else {
-        console.log("not found");
-    }
-}
+    
 
 function fixSideAffects() {
     document.querySelector("#AeriesAlert > img").className = "absolute scale-125 -translate-x-1/2 -translate-y-1/4 top-1/2 left-1/2"; //notification symbol
