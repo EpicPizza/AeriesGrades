@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Aeries Grades+",
-    "version": "0.5.2",
+    "version": "0.5.3",
     "author": "Alejandro Estrella",
     "description": "An improved grade viewer for Aeries.",
     "permissions": [

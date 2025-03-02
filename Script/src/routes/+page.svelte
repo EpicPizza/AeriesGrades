@@ -7,11 +7,11 @@
 
     const started = writable(false);
 
-    const defaultKeywords = { keywords: "final", version: "0.5.2" };
+    const defaultKeywords = { keywords: "final", version: "0.5.3" };
     export const settings = getSettings();
 
     function getSettings() {
-        const { set, subscribe, update } = writable({ version: "0.5.2", zeros: "no", developer: "off", mode: "default", keywords: "final", edited: false });
+        const { set, subscribe, update } = writable({ version: "0.5.3", zeros: "no", developer: "off", mode: "default", keywords: "final", edited: false });
         
         function init() {
             const saved = localStorage.getItem("aeries-grades+-settings");
@@ -98,7 +98,7 @@
 {/if}
 
 {#if open}
-    <button transition:fade={{ duration: 100 }} on:click|preventDefault|stopPropagation={() => { main.click(); }} aria-label="Close Search" class="{$settings.mode == 'dark' ? 'bg-zinc-100 bg-opacity-25' : $settings.mode == 'light' ? 'bg-zinc-900 bg-opacity-25' : 'bg-zinc-900 dark:bg-zinc-100 bg-opacity-25 dark:bg-opacity-25 '} w-full h-full absolute z-10">
+    <button transition:fade={{ duration: 100 }} on:click|preventDefault|stopPropagation={() => { document.getElementById("AeriesFullPageContent").click(); }} aria-label="Close Search" class="{$settings.mode == 'dark' ? 'bg-zinc-100 bg-opacity-25' : $settings.mode == 'light' ? 'bg-zinc-900 bg-opacity-25' : 'bg-zinc-900 dark:bg-zinc-100 bg-opacity-25 dark:bg-opacity-25 '} w-full h-full absolute z-10">
 
     </button>
 {/if}

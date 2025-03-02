@@ -83,6 +83,9 @@ There is no seperate dev/prod command, extension must be built to be tested.
 0.5.2:
 - Fixed classes fetch on main page being only for FUSD.
 
+0.5.3
+- Fixed bug, overlay for search/notif not closing.
+
 ## Testing
 
 Here is how to test the extension:
