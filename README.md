@@ -77,6 +77,9 @@ There is no seperate dev/prod command, extension must be built to be tested.
 - Aeries Grades+ now shows current terms on main page.
 - Bug with unweighted categories, calculates NaN with 0 points.
 
+0.5.1:
+- Fixed timestamp for classes fetched on main page not being updated.
+
 ## Testing
 
 Here is how to test the extension:
