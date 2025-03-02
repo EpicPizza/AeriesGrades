@@ -80,6 +80,9 @@ There is no seperate dev/prod command, extension must be built to be tested.
 0.5.1:
 - Fixed timestamp for classes fetched on main page not being updated.
 
+0.5.2:
+- Fixed classes fetch on main page being only for FUSD.
+
 ## Testing
 
 Here is how to test the extension:

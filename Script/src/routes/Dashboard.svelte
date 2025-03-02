@@ -19,7 +19,7 @@
     let loading = true;
 
     async function start() {
-        const rawClasses = (await (await fetch("https://fremontusd.aeries.net/student/Widgets/ClassSummary/GetClassSummary?IsProfile=True&_=" + new Date().valueOf(), {
+        const rawClasses = (await (await fetch(location.href.substring(0, location.href.lastIndexOf("/") + 1) + "Widgets/ClassSummary/GetClassSummary?IsProfile=True&_=" + new Date().valueOf(), {
             "body": null,
             "method": "GET",
         })).json());
