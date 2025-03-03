@@ -6,6 +6,54 @@
     import de from "date-and-time/locale/de";
     import { fade } from "svelte/transition";
     import { now } from "d3";
+    import Tooltip from "./Tooltip.svelte";
+    import Toggle from "./Toggle.svelte";
+    import Portal from "svelte-portal";
+
+    const types = [
+        {
+            type: ['Traditional', 'Weighted'],
+            supported: true,
+            headers: ['Category', 'Perc', 'Points', 'Max', 'Perc', 'Mark']
+        },
+        {
+            type: ['Traditional', 'Unweighted'],
+            supported: true,
+            headers: ['Category', 'Points', 'Max', 'Perc', 'Mark']
+        },
+        {
+            type: ['Traditional', "Weighted", "F/S Weighting"],
+            supported: false,
+            headers: ['Category', 'Perc', 'Summative Pts', 'Summative Max', 'Summative Perc', 'Formative Pts', 'Formative Max', 'Formative Perc', 'Overall Perc', 'Mark'],
+        },
+        {
+            type: ['Traditional', "Unweighted", "F/S Weighting"],
+            supported: false,
+            headers: ['Category', 'Summative Pts', 'Summative Max', 'Summative Perc', 'Formative Pts', 'Formative Max', 'Formative Perc', 'Overall Perc', 'Mark'],
+        },
+        {
+            type: ['Standards', 'Unweighted', "F/S Weighting"],
+            supported: false,
+            headers: ['Category', 'Summative Pts', 'Summative Avg', 'Formative Pts', 'Formative Avg', 'Overall Avg', 'Mark'],
+        },
+        {
+            type: ['Standards', 'Weighted', 'F/S Weighting'],
+            supported: false,
+            headers: ['Category', 'Perc', 'Summative Pts', 'Summative Avg', 'Formative Pts', 'Formative Avg', 'Overall Avg', 'Mark']
+        },
+        {
+            type: ['Standards', 'Unweighted'],
+            supported: false,
+            headers: ['Category', 'Points', 'Avg', 'Mark'],
+        },
+        {  
+            type: ['Standards', 'Weighted'],
+            supported: false,
+            headers: ['Category', 'Perc', 'Points', 'Avg', 'Mark']
+        }
+    ];
+
+    let recognizedType = null;
 
     let gradeHistory = [];
 
@@ -132,6 +180,49 @@
 
         document.title = period.name;
 
+        const table = document.querySelector("#ctl00_MainContent_subGBS_assignmentsView")?.children[3]?.children[0].children;
+
+        if(table) {
+            for(let i = 0; i < table.length; i++) {
+                const row = table[i]; 
+
+                if(row.children[0].innerText.trim() == "Category") {
+                    let headers = new Array();
+
+                    for(let j = 0; j < row.children.length; j++) {
+                        headers.push(row.children[j].innerText.trim());
+                    }
+
+                    for(let i = 0; i < types.length; i++) {
+                        const type = types[i];
+
+                        let supported = true;
+
+                        if(type.headers.length != headers.length) {
+                            supported = false;
+                            continue;
+                        }
+
+                        for(let j = 0; j < type.headers.length; j++) {
+                            if(!headers[j].includes(type.headers[j])) {
+                                supported = false;
+                            }
+                        }
+
+                        if(supported) {
+                            recognizedType = type;
+                        }
+                    }
+                }
+            }
+        }
+
+        if(recognizedType == null || recognizedType.supported == false) {
+            loading = false;
+            disabled = true;
+            return;
+        }
+
         const assignments = [];
 
         document.querySelectorAll(".Card").forEach((card, i) => {
@@ -226,8 +317,6 @@
                 }
             }
 
-            assignment.open = false;
-
             assignment.fake = false;
 
             assignments.push(assignment);
@@ -265,11 +354,8 @@
             return;
         };
 
-        const table = document.querySelector("#ctl00_MainContent_subGBS_assignmentsView").children[3].children[0].children;
-
         for(let i = 0; i < table.length; i++) {
             const row = table[i]; 
-            
 
             if(row.children[0].innerText.trim() == "Category" && row.children[1].innerText.trim() == "Points") {
                 noWeight = 1;
@@ -281,8 +367,6 @@
                 period.letter = row.children[5 - noWeight].innerText.trim();
                 period.grade = parseFloat(row.children[4 - noWeight].innerText.trim().substring(0, row.children[4 - noWeight].innerText.length - 1));
                 period.edit = parseFloat(row.children[4 - noWeight].innerText.trim().substring(0, row.children[4 - noWeight].innerText.length - 1));;
-
-                console.log(period);
             } else {
                 const category = {
                     name: row.children[0].innerText.trim(),
@@ -626,6 +710,8 @@
 
                 page.innerHTML = data.html;
 
+                recognizedType = null;
+
                 loading = true;
 
                 gradeHistory = [];
@@ -678,7 +764,85 @@
     <div class="hidden" id="hook">{JSON.stringify({ period: period, categories: categories, history: gradeHistory })}</div>
 {/if}
 
-{#if disabled}
+{#if (recognizedType == null || recognizedType.supported == false) && loading == false}
+    <Portal target="#aeriesgradesplus-top">
+        <div class="p-8 {$settings.mode == 'dark' ? "bg-zinc-900 text-white" : $settings.mode == 'light' ? "bg-zinc-100 text-black" : "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white"} h-full w-full relative my-4 rounded-lg">
+            <a class="px-4 py-3 block w-fit rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}" href={location.href.substring(0, location.href.lastIndexOf("/") + 1) + "GradebookSummary.aspx"}>
+                <div class="inline-block -mt-2 translate-y-2 scale-90 mr-1 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg>
+                </div>
+                All Grades
+            </a>
+               
+            <div class="{$settings.mode == 'dark' ? "bg-zinc-900" : $settings.mode == 'light' ? "bg-zinc-100" : "bg-zinc-100 dark:bg-zinc-900"} mb-4 mt-8">
+                <div class="flex items-center justify-between mb-2">
+                    <h1 class="text-3xl">{period.name}</h1>  
+                </div>
+    
+                <div class="flex flex-wrap items-center mb-4">
+                    <p>{period.slot}</p>
+                    <div class="h-1.5 w-1.5 {$settings.mode == 'dark' ? "bg-zinc-100" : $settings.mode == 'light' ? "bg-zinc-900" : "bg-zinc-900 dark:bg-zinc-100"} rounded-full mx-2"></div>
+                    <p>{period.teacher}</p>
+                    <div class="h-1.5 w-1.5 {$settings.mode == 'dark' ? "bg-zinc-100" : $settings.mode == 'light' ? "bg-zinc-900" : "bg-zinc-900 dark:bg-zinc-100"} rounded-full mx-2"></div>
+                    <p>{period.email}</p>
+                </div>
+            </div>
+    
+            <div class="mt-6 w-full bg-red-500 bg-opacity-30 px-5 py-4 rounded-md flex items-start">
+                <div class="scale-75 mr-3 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 -960 960 960" width="36px"><path d="M480-280q17 0 28.5-11.5T520-320q0-17-11.5-28.5T480-360q-17 0-28.5 11.5T440-320q0 17 11.5 28.5T480-280Zm-40-160h80v-240h-80v240Zm40 360q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
+                </div>
+                <div class="mr-2">
+                    <p class="font-bold text-lg mb-1">Oops! Aeries Grades+ can't load this page.</p>
+                    {#if expandError}
+                        <div transition:slide|local>
+                            {#if recognizedType == null}
+                                <p class="mb-2.5">Aeries Grades+ may have detected an unrecognized class configuration or a gradebook had not been set by your teacher.</p>
+                            {:else}
+                                <p class="mb-2.5">Aeries Grades+ does not currently support all class configurations. Formative & Summative Weighting and Standards Based Grading are not supported. Support is currently in progress.</p>
+                            {/if}
+                            <div class="flex gap-1.5 flex-wrap">
+                                <a href="https://docs.google.com/forms/d/e/1FAIpQLScMri2JCO1lXSXup-gbzKg-5OaOeiDh8e_R09Zh0EU8z7J8qg/viewform" class="px-4 py-2 {$settings.mode == 'dark' ? "text-white bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "text-black bg-zinc-900 bg-opacity-10" : "text-black dark:text-white bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} rounded-md">
+                                    Report Issue
+                                </a>
+                            </div>
+                        </div>
+                    {:else}
+                        {#if recognizedType == null}
+                            <p transition:slide>Aeries Grades+ detected an empty gradebook or an unsupported class configuration.</p>
+                        {:else}
+                            <p transition:slide>Aeries Grades+ detected an unsupported class configuration.</p>
+                        {/if}
+                    {/if}
+                </div>
+                <button aria-label="More Details" on:click|preventDefault={() => { expandError = !expandError; }} class="p-2 rounded-full {$settings.mode == 'dark' ? "text-white bg-zinc-100 bg-opacity-10 fill-white" : $settings.mode == 'light' ? "text-black bg-zinc-900 bg-opacity-10 fill-black" : "text-black dark:text-white bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10 fill-black dark:fill-white"} ml-auto">
+                    {#if expandError}
+                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="m296-80-56-56 240-240 240 240-56 56-184-184L296-80Zm184-504L240-824l56-56 184 184 184-184 56 56-240 240Z"/></svg>
+                    {:else}
+                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="M480-80 240-320l57-57 183 183 183-183 57 57L480-80ZM298-584l-58-56 240-240 240 240-58 56-182-182-182 182Z"/></svg>
+                    {/if}
+                </button>
+            </div>
+    
+            {#if $settings.developer == "on"}
+                <div class="flex gap-2 mt-8">   
+                    <button on:click|preventDefault={() => { download(); }} class="px-4 py-3 transition-all rounded-md  {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                        Download
+                        <div class="inline-block ml-1.5 translate-y-0.5 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg>
+                        </div>
+                    </button>
+                    <button on:click|preventDefault={() => { upload(); }} class="px-4 py-3 transition-all rounded-md  {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                        Emulate
+                        <div class="inline-block ml-1.5 translate-y-0.5 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                            <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px"><path d="M440-160v-326L336-382l-56-58 200-200 200 200-56 58-104-104v326h-80ZM160-600v-120q0-33 23.5-56.5T240-800h480q33 0 56.5 23.5T800-720v120h-80v-120H240v120h-80Z"/></svg>
+                        </div>
+                    </button>
+                </div>
+            {/if}
+        </div>
+    </Portal>
+{:else if disabled}
     <div class="p-4 {$settings.mode == 'dark' ? "bg-zinc-900 text-white" : $settings.mode == 'light' ? "bg-zinc-100 text-black" : "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white"} rounded-br-2xl">
         <button on:click|preventDefault={() => { disabled = !disabled; }} class="px-4 py-2 {$settings.mode == "dark" ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} rounded-md">
             Show Aeries Grades+
@@ -746,19 +910,7 @@
                 </button>
             </div>
         </div>
-
-        {#if noWeight} 
-            <div class="mt-6 w-full bg-blue-400 bg-opacity-30 px-5 py-4 rounded-md flex items-start">
-                <div class="scale-75 mr-3 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="36px" viewBox="0 -960 960 960" width="36px"><path d="M440-280h80v-240h-80v240Zm40-320q17 0 28.5-11.5T520-640q0-17-11.5-28.5T480-680q-17 0-28.5 11.5T440-640q0 17 11.5 28.5T480-600Zm0 520q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T197-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T763-197q-54 54-127 85.5T480-80Zm0-80q134 0 227-93t93-227q0-134-93-227t-227-93q-134 0-227 93t-93 227q0 134 93 227t227 93Zm0-320Z"/></svg>
-                </div>
-                <div class="mr-2">
-                    <p class="font-bold text-lg mb-1">No Category Weighting</p>
-                    <p>Grade will be calculated with no weighting.</p>
-                </div>
-            </div>
-        {/if}
-
+        
         {#if error}
             <div class="mt-6 w-full bg-red-500 bg-opacity-30 px-5 py-4 rounded-md flex items-start">
                 <div class="scale-75 mr-3 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
@@ -797,8 +949,86 @@
                 <p class="text-xl font-bold">Loading...</p>
             </div>
         {:else}
+
+            <div class="mt-6 mb-4">
+                <Tooltip settings={settings} started={started}>
+                    <svelte:fragment slot="element">
+                        <div class="flex items-center gap-2 mb-2 w-fit px-3 py-2 rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                            {#if recognizedType.type.includes('Traditional')}
+                                <div class="flex items-center gap-1">
+                                    <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="M320-240h60v-80h80v-60h-80v-80h-60v80h-80v60h80v80Zm200-30h200v-60H520v60Zm0-100h200v-60H520v60Zm44-152 56-56 56 56 42-42-56-58 56-56-42-42-56 56-56-56-42 42 56 56-56 58 42 42Zm-314-70h200v-60H250v60Zm-50 472q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>
+                                    </div>
+                                    Traditional
+                                </div>
+                            {/if}
+                            <div class="h-1.5 w-1.5 rounded-full {$settings.mode == 'dark' ? "bg-white" : $settings.mode == 'light' ? "bg-black" : "bg-black dark:bg-white"}"></div>
+                            {#if recognizedType.type.includes('Weighted')}
+                                <div class="flex items-center gap-1">
+                                    <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="M640-160v-280h160v280H640Zm-240 0v-640h160v640H400Zm-240 0v-440h160v440H160Z"/></svg>
+                                    </div>
+                                    Weighted
+                                </div>
+                            {/if}
+                            {#if recognizedType.type.includes('Unweighted')}
+                                <div class="flex items-center gap-1">
+                                    <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="M360-200v-80h480v80H360Zm0-240v-80h480v80H360Zm0-240v-80h480v80H360ZM200-160q-33 0-56.5-23.5T120-240q0-33 23.5-56.5T200-320q33 0 56.5 23.5T280-240q0 33-23.5 56.5T200-160Zm0-240q-33 0-56.5-23.5T120-480q0-33 23.5-56.5T200-560q33 0 56.5 23.5T280-480q0 33-23.5 56.5T200-400Zm0-240q-33 0-56.5-23.5T120-720q0-33 23.5-56.5T200-800q33 0 56.5 23.5T280-720q0 33-23.5 56.5T200-640Z"/></svg>
+                                    </div>
+                                    Unweighted
+                                </div>
+                            {/if}
+                        </div>
+                    </svelte:fragment>
+                    <svelte:fragment slot="tooltip">
+                        <div class="flex flex-row items-start gap-8 p-4">
+                            <div class="flex flex-col gap-2">
+                                <p class="font-extrabold">Grading</p>
+                                <div class="flex items-center gap-1">
+                                    <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="M320-240h60v-80h80v-60h-80v-80h-60v80h-80v60h80v80Zm200-30h200v-60H520v60Zm0-100h200v-60H520v60Zm44-152 56-56 56 56 42-42-56-58 56-56-42-42-56 56-56-56-42 42 56 56-56 58 42 42Zm-314-70h200v-60H250v60Zm-50 472q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/></svg>
+                                    </div>
+                                    Traditional
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="M222-200 80-342l56-56 85 85 170-170 56 57-225 226Zm0-320L80-662l56-56 85 85 170-170 56 57-225 226Zm298 240v-80h360v80H520Zm0-320v-80h360v80H520Z"/></svg>
+                                    </div>
+                                    Standards Based
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <p class="font-extrabold">Categories</p>
+                                <div class="flex items-center gap-1">
+                                    <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="M640-160v-280h160v280H640Zm-240 0v-640h160v640H400Zm-240 0v-440h160v440H160Z"/></svg>
+                                    </div>
+                                    Weighted
+                                </div>
+                                <div class="flex items-center gap-1">
+                                    <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="M360-200v-80h480v80H360Zm0-240v-80h480v80H360Zm0-240v-80h480v80H360ZM200-160q-33 0-56.5-23.5T120-240q0-33 23.5-56.5T200-320q33 0 56.5 23.5T280-240q0 33-23.5 56.5T200-160Zm0-240q-33 0-56.5-23.5T120-480q0-33 23.5-56.5T200-560q33 0 56.5 23.5T280-480q0 33-23.5 56.5T200-400Zm0-240q-33 0-56.5-23.5T120-720q0-33 23.5-56.5T200-800q33 0 56.5 23.5T280-720q0 33-23.5 56.5T200-640Z"/></svg>
+                                    </div>
+                                    Unweighted
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <p class="font-extrabold">Misc</p>
+                                <div class="flex items-center gap-1">
+                                    <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px"><path d="M160-400v-80h280v80H160Zm0-160v-80h440v80H160Zm0-160v-80h440v80H160Zm360 560v-123l221-220q9-9 20-13t22-4q12 0 23 4.5t20 13.5l37 37q8 9 12.5 20t4.5 22q0 11-4 22.5T863-380L643-160H520Zm300-263-37-37 37 37ZM580-220h38l121-122-18-19-19-18-122 121v38Zm141-141-19-18 37 37-18-19Z"/></svg>
+                                    </div>
+                                    F/S Weighting
+                                </div>
+                            </div>
+                        </div>
+                    </svelte:fragment>
+                </Tooltip>
+            </div>
+
             <div bind:clientHeight={height} class="absolute {$settings.mode == 'dark' ? "bg-zinc-900" : $settings.mode == 'light' ? "bg-zinc-100" : "bg-zinc-100 dark:bg-zinc-900"} z-[7] w-[calc(100%-4rem)]" style="margin-bottom: calc({height}px - 4rem)">
-                <div class="flex items-center justify-between mb-2 mt-8">
+                <div class="flex items-center justify-between mb-2">
                     <h1 class="text-3xl">{period.name}</h1>
                     {#if edit}
                         <div class="flex items-center">
@@ -1028,260 +1258,262 @@
                     <div class="mb-8 relative">
                         {#each category.assignments as assignment, i}
                             {#if assignment.fake == false}
-                                <button on:click|preventDefault|stopPropagation={() => { assignment.open = !assignment.open; }} class="w-full px-4 text-left mt-2 {(assignment.missing || (zeros && assignment.actual.score == 0 && assignment.percent != - 1)) && (!edit || (assignment.edit.score == 0)) ? "bg-red-500 dark:bg-red-500 bg-opacity-20 dark:bg-opacity-20" : $settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} rounded-md p-3">
-                                    <div class="flex items-center">
-                                        {#if width > 1000}
-                                            <p class="w-[40%] pr-4">{assignment.name}{(assignment.missing || (zeros && assignment.actual.score == 0 && assignment.percent != - 1)) && (!edit || (assignment.edit.score == 0)) ? (assignment.missing ? " - Missing" : " - Zero") : ""}</p>
-                                            <p class="w-[15%]">{assignment.due == "n/a" ? "" : dnt.format(assignment.due, "MM/DD/YYYY")}</p>
-                                            <p class="w-[15%]">{assignment.completed == "n/a" ? "" : dnt.format(assignment.completed, "MM/DD/YYYY")}</p>
-                                            <p class="w-[10%]">
-                                                {#if edit}
-                                                    {!(assignment.edit.score || assignment.edit.score === 0) || !assignment.edit.total ? "" : (assignment.edit.score / assignment.edit.total * 100).toFixed(2) + "%"}
-                                                {:else}
-                                                    {assignment.percent == -1 || assignment.actual.total == 0 ? "" : assignment.percent + "%"}
-                                                {/if}
-                                            </p>
-                                            <!-- svelte-ignore a11y_click_events_have_key_events -->
-                                            <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                            <div on:click|stopPropagation|preventDefault class="w-[20%] {edit ? "p-1.5 -my-1.5" : ""}">
-                                                {#if edit}
-                                                    <div class="flex items-center">
-                                                        <div class="w-fit h-full rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
-                                                            <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-zinc-100 bg-opacity-0">/
-                                                            <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-zinc-100 bg-opacity-0">
-                                                        </div>
-                                                        {#if assignment.weight != 1 && assignment.actual.total != 0}
-                                                            <span class="text-sm opacity-80 ml-1.5">
-                                                                x{Math.round(assignment.weight * 100) / 100}   
-                                                            </span>
-                                                        {/if}
-                                                        {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
-                                                            <!-- svelte-ignore node_invalid_placement_ssr -->
-                                                            <button aria-label="Reset" on:click={() => {
-                                                                if(assignment.percent != -1) {
-                                                                    assignment.edit.score = assignment.actual.score; 
-                                                                    assignment.edit.total = assignment.actual.total;
-                                                                } else {
-                                                                    assignment.edit.score = "";
-                                                                    assignment.edit.total = assignment.actual.total;
-                                                                }
-                                                            }} class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} -my-0.5">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
-                                                            </button>
-                                                        {/if}
-                                                    </div>
-                                                {:else}
-                                                    {#if assignment.percent == -1 && assignment.actual.total == 0}
-                                                        - / -
+                                <Toggle let:open let:toggle>
+                                    <button on:click|preventDefault|stopPropagation={() => { toggle(); }} class="w-full px-4 text-left mt-2 {(assignment.missing || (zeros && assignment.actual.score == 0 && assignment.percent != - 1)) && (!edit || (assignment.edit.score == 0)) ? "bg-red-500 dark:bg-red-500 bg-opacity-20 dark:bg-opacity-20" : $settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} rounded-md p-3">
+                                        <div class="flex items-center">
+                                            {#if width > 1000}
+                                                <p class="w-[40%] pr-4">{assignment.name}{(assignment.missing || (zeros && assignment.actual.score == 0 && assignment.percent != - 1)) && (!edit || (assignment.edit.score == 0)) ? (assignment.missing ? " - Missing" : " - Zero") : ""}</p>
+                                                <p class="w-[15%]">{assignment.due == "n/a" ? "" : dnt.format(assignment.due, "MM/DD/YYYY")}</p>
+                                                <p class="w-[15%]">{assignment.completed == "n/a" ? "" : dnt.format(assignment.completed, "MM/DD/YYYY")}</p>
+                                                <p class="w-[10%]">
+                                                    {#if edit}
+                                                        {!(assignment.edit.score || assignment.edit.score === 0) || !assignment.edit.total ? "" : (assignment.edit.score / assignment.edit.total * 100).toFixed(2) + "%"}
                                                     {:else}
-                                                        {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
-                                                        {#if assignment.weight != 1}
-                                                            <span class="text-sm opacity-80 ml-0.5">
-                                                                x{Math.round(assignment.weight * 100) / 100}   
-                                                            </span>
+                                                        {assignment.percent == -1 || assignment.actual.total == 0 ? "" : assignment.percent + "%"}
+                                                    {/if}
+                                                </p>
+                                                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                                <div on:click|stopPropagation|preventDefault class="w-[20%] {edit ? "p-1.5 -my-1.5" : ""}">
+                                                    {#if edit}
+                                                        <div class="flex items-center">
+                                                            <div class="w-fit h-full rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                                                                <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-zinc-100 bg-opacity-0">/
+                                                                <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-zinc-100 bg-opacity-0">
+                                                            </div>
+                                                            {#if assignment.weight != 1 && assignment.actual.total != 0}
+                                                                <span class="text-sm opacity-80 ml-1.5">
+                                                                    x{Math.round(assignment.weight * 100) / 100}   
+                                                                </span>
+                                                            {/if}
+                                                            {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
+                                                                <!-- svelte-ignore node_invalid_placement_ssr -->
+                                                                <button aria-label="Reset" on:click={() => {
+                                                                    if(assignment.percent != -1) {
+                                                                        assignment.edit.score = assignment.actual.score; 
+                                                                        assignment.edit.total = assignment.actual.total;
+                                                                    } else {
+                                                                        assignment.edit.score = "";
+                                                                        assignment.edit.total = assignment.actual.total;
+                                                                    }
+                                                                }} class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} -my-0.5">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
+                                                                </button>
+                                                            {/if}
+                                                        </div>
+                                                    {:else}
+                                                        {#if assignment.percent == -1 && assignment.actual.total == 0}
+                                                            - / -
+                                                        {:else}
+                                                            {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
+                                                            {#if assignment.weight != 1}
+                                                                <span class="text-sm opacity-80 ml-0.5">
+                                                                    x{Math.round(assignment.weight * 100) / 100}   
+                                                                </span>
+                                                            {/if}
                                                         {/if}
                                                     {/if}
-                                                {/if}
+                                                </div>
+                                            {:else if width > 800}
+                                                <p class="w-1/3 pr-4">{assignment.name}{(assignment.missing || (zeros && assignment.actual.score == 0 && assignment.percent != - 1)) && (!edit || (assignment.edit.score == 0)) ? (assignment.missing ? " - Missing" : " - Zero") : ""}</p>
+                                                
+                                                <p class="w-1/5">{assignment.due == "n/a" ? "" : dnt.format(assignment.due, "MM/DD/YYYY")}</p>
+                                                <p class="w-1/6">
+                                                    {#if edit}
+                                                        {!(assignment.edit.score || assignment.edit.score === 0) || !assignment.edit.total ? "" : (assignment.edit.score / assignment.edit.total * 100).toFixed(2) + "%"}
+                                                    {:else}
+                                                        {assignment.percent == -1 || assignment.actual.total == 0 ? "" : assignment.percent + "%"}
+                                                    {/if}
+                                                </p>
+                                                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                                <div on:click|stopPropagation|preventDefault class="w-[25%] {edit ? "p-1.5 -my-1.5" : ""}">
+                                                    {#if edit}
+                                                        <div class="flex items-center">
+                                                            <div class="w-fit h-full rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                                                                <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-zinc-100 bg-opacity-0">/
+                                                                <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-zinc-100 bg-opacity-0">
+                                                            </div>
+                                                            {#if assignment.weight != 1 && assignment.actual.total != 0}
+                                                                <span class="text-sm opacity-80 ml-1.5">
+                                                                    x{Math.round(assignment.weight * 100) / 100}   
+                                                                </span>
+                                                            {/if}
+                                                            {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
+                                                                <!-- svelte-ignore node_invalid_placement_ssr -->
+                                                                <button aria-label="Reset" on:click={() => {
+                                                                    if(assignment.percent != -1) {
+                                                                        assignment.edit.score = assignment.actual.score; 
+                                                                        assignment.edit.total = assignment.actual.total;
+                                                                    } else {
+                                                                        assignment.edit.score = "";
+                                                                        assignment.edit.total = assignment.actual.total;
+                                                                    }
+                                                                }} class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} -my-0.5">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
+                                                                </button>
+                                                            {/if}
+                                                        </div>
+                                                    {:else}
+                                                        {#if assignment.percent == -1 && assignment.actual.total == 0}
+                                                            - / -
+                                                        {:else}
+                                                            {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
+                                                            {#if assignment.weight != 1 && assignment.actual.total != 0}
+                                                                <span class="text-sm opacity-80 ml-0.5">
+                                                                    x{Math.round(assignment.weight * 100) / 100}   
+                                                                </span>
+                                                            {/if}
+                                                        {/if}
+                                                    {/if}
+                                                </div>
+                                            {:else if width > 640}
+                                                <p class="w-1/2 pr-4">{assignment.name}{(assignment.missing || (zeros && assignment.actual.score == 0 && assignment.percent != - 1)) && (!edit || (assignment.edit.score == 0)) ? (assignment.missing ? " - Missing" : " - Zero") : ""}</p>
+                                                <p class="w-1/6">
+                                                    {#if edit}
+                                                        {!(assignment.edit.score || assignment.edit.score === 0) || !assignment.edit.total ? "" : (assignment.edit.score / assignment.edit.total * 100).toFixed(2) + "%"}
+                                                    {:else}
+                                                        {assignment.percent == -1 || assignment.actual.total == 0 ? "" : assignment.percent + "%"}
+                                                    {/if}
+                                                </p>
+                                                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                                <div on:click|stopPropagation|preventDefault class="w-2/6 {edit ? "p-1.5 -my-1.5" : ""}">
+                                                    {#if edit}
+                                                        <div class="flex items-center">
+                                                            <div class="w-fit h-full rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                                                                <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-zinc-100 bg-opacity-0">/
+                                                                <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-zinc-100 bg-opacity-0">
+                                                            </div>
+                                                            {#if assignment.weight != 1 && assignment.actual.total != 0}
+                                                                <span class="text-sm opacity-80 ml-1.5">
+                                                                    x{Math.round(assignment.weight * 100) / 100}   
+                                                                </span>
+                                                            {/if}
+                                                            {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
+                                                                <!-- svelte-ignore node_invalid_placement_ssr -->
+                                                                <button aria-label="Reset" on:click={() => {
+                                                                    if(assignment.percent != -1) {
+                                                                        assignment.edit.score = assignment.actual.score; 
+                                                                        assignment.edit.total = assignment.actual.total;
+                                                                    } else {
+                                                                        assignment.edit.score = "";
+                                                                        assignment.edit.total = assignment.actual.total;
+                                                                    }
+                                                                }} class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} -my-0.5">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
+                                                                </button>
+                                                            {/if}
+                                                        </div>
+                                                    {:else}
+                                                        {#if assignment.percent == -1 && assignment.actual.total == 0}
+                                                            - / -
+                                                        {:else}
+                                                            {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
+                                                            {#if assignment.weight != 1 && assignment.actual.total != 0}
+                                                                <span class="text-sm opacity-80 ml-0.5">
+                                                                    x{Math.round(assignment.weight * 100) / 100}   
+                                                                </span>
+                                                            {/if}
+                                                        {/if}
+                                                    {/if}
+                                                </div>
+                                            {:else}
+                                                <p class="w-[62%] pr-4">{assignment.name}{(assignment.missing || (zeros && assignment.actual.score == 0 && assignment.percent != - 1)) && (!edit || (assignment.edit.score == 0)) ? (assignment.missing ? " - Missing" : " - Zero") : ""}</p>
+                                                <!-- svelte-ignore a11y_click_events_have_key_events -->
+                                                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                                                <div on:click|stopPropagation|preventDefault class="w-[38%] {edit ? "p-1.5 -my-1.5" : ""}">
+                                                    {#if edit}
+                                                        <div class="flex items-center">
+                                                            <div class="w-fit h-full rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                                                                <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-zinc-100 bg-opacity-0">/
+                                                                <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-zinc-100 bg-opacity-0">
+                                                            </div>
+                                                            {#if assignment.weight != 1}
+                                                                <span class="text-sm opacity-80 ml-1.5">
+                                                                    x{Math.round(assignment.weight * 100) / 100}   
+                                                                </span>
+                                                            {/if}
+                                                            {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
+                                                                <!-- svelte-ignore node_invalid_placement_ssr -->
+                                                                <button aria-label="Reset" on:click={() => {
+                                                                    if(assignment.percent != -1) {
+                                                                        assignment.edit.score = assignment.actual.score; 
+                                                                        assignment.edit.total = assignment.actual.total;
+                                                                    } else {
+                                                                        assignment.edit.score = "";
+                                                                        assignment.edit.total = assignment.actual.total;
+                                                                    }
+                                                                }} class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} -my-0.5">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
+                                                                </button>
+                                                            {/if}
+                                                        </div>
+                                                    {:else}
+                                                        {#if assignment.percent == -1 && assignment.actual.total == 0}
+                                                            - / -
+                                                        {:else}
+                                                            {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
+                                                            {#if assignment.weight != 1}
+                                                                <span class="text-sm opacity-80 ml-0.5">
+                                                                    x{Math.round(assignment.weight * 100) / 100}   
+                                                                </span>
+                                                            {/if}
+                                                        {/if}
+                                                    {/if}
+                                                </div>
+                                            {/if}
+                                        </div>
+                                        {#if assignment.comments.length > 0}
+                                            <div class="w-full mt-2 flex items-start py-1.5 px-2 rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
+                                                <div class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} my-0.5">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M240-400h480v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM880-80 720-240H160q-33 0-56.5-23.5T80-320v-480q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v720ZM160-320h594l46 45v-525H160v480Zm0 0v-480 480Z"/></svg>
+                                                </div>
+                                                <div class="mb-1">
+                                                    {#each assignment.comments as comment}
+                                                        <p class="mt-1">
+                                                            {comment}
+                                                        </p>
+                                                    {/each}
+                                                </div>
                                             </div>
-                                        {:else if width > 800}
-                                            <p class="w-1/3 pr-4">{assignment.name}{(assignment.missing || (zeros && assignment.actual.score == 0 && assignment.percent != - 1)) && (!edit || (assignment.edit.score == 0)) ? (assignment.missing ? " - Missing" : " - Zero") : ""}</p>
-                                            
-                                            <p class="w-1/5">{assignment.due == "n/a" ? "" : dnt.format(assignment.due, "MM/DD/YYYY")}</p>
-                                            <p class="w-1/6">
-                                                {#if edit}
-                                                    {!(assignment.edit.score || assignment.edit.score === 0) || !assignment.edit.total ? "" : (assignment.edit.score / assignment.edit.total * 100).toFixed(2) + "%"}
-                                                {:else}
-                                                    {assignment.percent == -1 || assignment.actual.total == 0 ? "" : assignment.percent + "%"}
-                                                {/if}
-                                            </p>
-                                            <!-- svelte-ignore a11y_click_events_have_key_events -->
-                                            <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                            <div on:click|stopPropagation|preventDefault class="w-[25%] {edit ? "p-1.5 -my-1.5" : ""}">
-                                                {#if edit}
-                                                    <div class="flex items-center">
-                                                        <div class="w-fit h-full rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
-                                                            <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-zinc-100 bg-opacity-0">/
-                                                            <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-zinc-100 bg-opacity-0">
-                                                        </div>
-                                                        {#if assignment.weight != 1 && assignment.actual.total != 0}
-                                                            <span class="text-sm opacity-80 ml-1.5">
-                                                                x{Math.round(assignment.weight * 100) / 100}   
-                                                            </span>
-                                                        {/if}
-                                                        {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
-                                                            <!-- svelte-ignore node_invalid_placement_ssr -->
-                                                            <button aria-label="Reset" on:click={() => {
-                                                                if(assignment.percent != -1) {
-                                                                    assignment.edit.score = assignment.actual.score; 
-                                                                    assignment.edit.total = assignment.actual.total;
-                                                                } else {
-                                                                    assignment.edit.score = "";
-                                                                    assignment.edit.total = assignment.actual.total;
-                                                                }
-                                                            }} class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} -my-0.5">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
-                                                            </button>
-                                                        {/if}
-                                                    </div>
-                                                {:else}
-                                                    {#if assignment.percent == -1 && assignment.actual.total == 0}
-                                                        - / -
-                                                    {:else}
-                                                        {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
-                                                        {#if assignment.weight != 1 && assignment.actual.total != 0}
-                                                            <span class="text-sm opacity-80 ml-0.5">
-                                                                x{Math.round(assignment.weight * 100) / 100}   
-                                                            </span>
+                                        {/if}
+                                        {#if open}
+                                            <div transition:slide>
+                                                <div class="w-full h-2"></div>
+                                                <hr class="{$settings.mode == 'dark' ? "border-gray-700" : $settings.mode == 'light' ? "border-gray-300" : "border-gray-300 dark:border-gray-700"}">
+                                                <div class="flex flex-wrap items-center mt-2">
+                                                    {#if assignment.assigned != "n/a"}
+                                                        <p>Assigned {dnt.format(assignment.assigned, "MM/DD/YYYY")}</p>
+                                                        {#if width <= 1000} 
+                                                            <div class="h-1.5 w-1.5 {$settings.mode == 'dark' ? "bg-zinc-100" : $settings.mode == 'light' ? "bg-zinc-900" : "bg-zinc-900 dark:bg-zinc-100"} rounded-full mx-2"></div>
                                                         {/if}
                                                     {/if}
-                                                {/if}
-                                            </div>
-                                        {:else if width > 640}
-                                            <p class="w-1/2 pr-4">{assignment.name}{(assignment.missing || (zeros && assignment.actual.score == 0 && assignment.percent != - 1)) && (!edit || (assignment.edit.score == 0)) ? (assignment.missing ? " - Missing" : " - Zero") : ""}</p>
-                                            <p class="w-1/6">
-                                                {#if edit}
-                                                    {!(assignment.edit.score || assignment.edit.score === 0) || !assignment.edit.total ? "" : (assignment.edit.score / assignment.edit.total * 100).toFixed(2) + "%"}
-                                                {:else}
-                                                    {assignment.percent == -1 || assignment.actual.total == 0 ? "" : assignment.percent + "%"}
-                                                {/if}
-                                            </p>
-                                            <!-- svelte-ignore a11y_click_events_have_key_events -->
-                                            <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                            <div on:click|stopPropagation|preventDefault class="w-2/6 {edit ? "p-1.5 -my-1.5" : ""}">
-                                                {#if edit}
-                                                    <div class="flex items-center">
-                                                        <div class="w-fit h-full rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
-                                                            <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-zinc-100 bg-opacity-0">/
-                                                            <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-zinc-100 bg-opacity-0">
-                                                        </div>
-                                                        {#if assignment.weight != 1 && assignment.actual.total != 0}
-                                                            <span class="text-sm opacity-80 ml-1.5">
-                                                                x{Math.round(assignment.weight * 100) / 100}   
-                                                            </span>
-                                                        {/if}
-                                                        {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
-                                                            <!-- svelte-ignore node_invalid_placement_ssr -->
-                                                            <button aria-label="Reset" on:click={() => {
-                                                                if(assignment.percent != -1) {
-                                                                    assignment.edit.score = assignment.actual.score; 
-                                                                    assignment.edit.total = assignment.actual.total;
-                                                                } else {
-                                                                    assignment.edit.score = "";
-                                                                    assignment.edit.total = assignment.actual.total;
-                                                                }
-                                                            }} class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} -my-0.5">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
-                                                            </button>
-                                                        {/if}
-                                                    </div>
-                                                {:else}
-                                                    {#if assignment.percent == -1 && assignment.actual.total == 0}
-                                                        - / -
-                                                    {:else}
-                                                        {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
-                                                        {#if assignment.weight != 1 && assignment.actual.total != 0}
-                                                            <span class="text-sm opacity-80 ml-0.5">
-                                                                x{Math.round(assignment.weight * 100) / 100}   
-                                                            </span>
+                                                    {#if assignment.due != "n/a" && width < 1000}
+                                                        <p>Due {dnt.format(assignment.due, "MM/DD/YYYY")}</p>
+                                                        {#if width <= 800} 
+                                                            <div class="h-1.5 w-1.5 {$settings.mode == 'dark' ? "bg-zinc-100" : $settings.mode == 'light' ? "bg-zinc-900" : "bg-zinc-900 dark:bg-zinc-100"} rounded-full mx-2"></div>
                                                         {/if}
                                                     {/if}
-                                                {/if}
-                                            </div>
-                                        {:else}
-                                            <p class="w-[62%] pr-4">{assignment.name}{(assignment.missing || (zeros && assignment.actual.score == 0 && assignment.percent != - 1)) && (!edit || (assignment.edit.score == 0)) ? (assignment.missing ? " - Missing" : " - Zero") : ""}</p>
-                                            <!-- svelte-ignore a11y_click_events_have_key_events -->
-                                            <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                            <div on:click|stopPropagation|preventDefault class="w-[38%] {edit ? "p-1.5 -my-1.5" : ""}">
-                                                {#if edit}
-                                                    <div class="flex items-center">
-                                                        <div class="w-fit h-full rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
-                                                            <input bind:value={assignment.edit.score} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-right mx-[0.22rem] bg-zinc-100 bg-opacity-0">/
-                                                            <input bind:value={assignment.edit.total} on:keydown={(event) => { if(event.keyCode == 13) { event.preventDefault(); } }} class="w-10 text-left mr-[0.22rem] bg-zinc-100 bg-opacity-0">
-                                                        </div>
-                                                        {#if assignment.weight != 1}
-                                                            <span class="text-sm opacity-80 ml-1.5">
-                                                                x{Math.round(assignment.weight * 100) / 100}   
-                                                            </span>
-                                                        {/if}
-                                                        {#if ((assignment.edit.score != assignment.actual.score && assignment.percent != -1) || (assignment.edit.score > 0 && assignment.percent == -1)) || assignment.edit.total != assignment.actual.total }
-                                                            <!-- svelte-ignore node_invalid_placement_ssr -->
-                                                            <button aria-label="Reset" on:click={() => {
-                                                                if(assignment.percent != -1) {
-                                                                    assignment.edit.score = assignment.actual.score; 
-                                                                    assignment.edit.total = assignment.actual.total;
-                                                                } else {
-                                                                    assignment.edit.score = "";
-                                                                    assignment.edit.total = assignment.actual.total;
-                                                                }
-                                                            }} class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} -my-0.5">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M480-160q-134 0-227-93t-93-227q0-134 93-227t227-93q69 0 132 28.5T720-690v-110h80v280H520v-80h168q-32-56-87.5-88T480-720q-100 0-170 70t-70 170q0 100 70 170t170 70q77 0 139-44t87-116h84q-28 106-114 173t-196 67Z"/></svg>
-                                                            </button>
-                                                        {/if}
-                                                    </div>
-                                                {:else}
-                                                    {#if assignment.percent == -1 && assignment.actual.total == 0}
-                                                        - / -
-                                                    {:else}
-                                                        {assignment.percent == -1 ? "-" : assignment.actual.score}/{assignment.actual.total}
-                                                        {#if assignment.weight != 1}
-                                                            <span class="text-sm opacity-80 ml-0.5">
-                                                                x{Math.round(assignment.weight * 100) / 100}   
-                                                            </span>
+                                                    {#if assignment.completed != "n/a" && width <= 800}
+                                                        <p>Completed {dnt.format(assignment.completed, "MM/DD/YYYY")}</p>
+                                                        {#if width <= 640} 
+                                                            <div class="h-1.5 w-1.5 {$settings.mode == 'dark' ? "bg-zinc-100" : $settings.mode == 'light' ? "bg-zinc-900" : "bg-zinc-900 dark:bg-zinc-100"} rounded-full mx-2"></div>
                                                         {/if}
                                                     {/if}
+                                                    {#if assignment.percent != -1 && width <= 640}
+                                                        <p>Scored {assignment.percent + "%"}</p>
+                                                    {/if}
+                                                </div>
+                                                {#if assignment.description.trim() != ""}
+                                                    <p class="pt-2">
+                                                        {assignment.description}
+                                                    </p>
                                                 {/if}
                                             </div>
                                         {/if}
-                                    </div>
-                                    {#if assignment.comments.length > 0}
-                                        <div class="w-full mt-2 flex items-start py-1.5 px-2 rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
-                                            <div class="scale-75 mr-2 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"} my-0.5">
-                                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="M240-400h480v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM880-80 720-240H160q-33 0-56.5-23.5T80-320v-480q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T880-800v720ZM160-320h594l46 45v-525H160v480Zm0 0v-480 480Z"/></svg>
-                                            </div>
-                                            <div class="mb-1">
-                                                {#each assignment.comments as comment}
-                                                    <p class="mt-1">
-                                                        {comment}
-                                                    </p>
-                                                {/each}
-                                            </div>
-                                        </div>
-                                    {/if}
-                                    {#if assignment.open}
-                                        <div transition:slide>
-                                            <div class="w-full h-2"></div>
-                                            <hr class="{$settings.mode == 'dark' ? "border-gray-700" : $settings.mode == 'light' ? "border-gray-300" : "border-gray-300 dark:border-gray-700"}">
-                                            <div class="flex flex-wrap items-center mt-2">
-                                                {#if assignment.assigned != "n/a"}
-                                                    <p>Assigned {dnt.format(assignment.assigned, "MM/DD/YYYY")}</p>
-                                                    {#if width <= 1000} 
-                                                        <div class="h-1.5 w-1.5 {$settings.mode == 'dark' ? "bg-zinc-100" : $settings.mode == 'light' ? "bg-zinc-900" : "bg-zinc-900 dark:bg-zinc-100"} rounded-full mx-2"></div>
-                                                    {/if}
-                                                {/if}
-                                                {#if assignment.due != "n/a" && width < 1000}
-                                                    <p>Due {dnt.format(assignment.due, "MM/DD/YYYY")}</p>
-                                                    {#if width <= 800} 
-                                                        <div class="h-1.5 w-1.5 {$settings.mode == 'dark' ? "bg-zinc-100" : $settings.mode == 'light' ? "bg-zinc-900" : "bg-zinc-900 dark:bg-zinc-100"} rounded-full mx-2"></div>
-                                                    {/if}
-                                                {/if}
-                                                {#if assignment.completed != "n/a" && width <= 800}
-                                                    <p>Completed {dnt.format(assignment.completed, "MM/DD/YYYY")}</p>
-                                                    {#if width <= 640} 
-                                                        <div class="h-1.5 w-1.5 {$settings.mode == 'dark' ? "bg-zinc-100" : $settings.mode == 'light' ? "bg-zinc-900" : "bg-zinc-900 dark:bg-zinc-100"} rounded-full mx-2"></div>
-                                                    {/if}
-                                                {/if}
-                                                {#if assignment.percent != -1 && width <= 640}
-                                                    <p>Scored {assignment.percent + "%"}</p>
-                                                {/if}
-                                            </div>
-                                            {#if assignment.description.trim() != ""}
-                                                <p class="pt-2">
-                                                    {assignment.description}
-                                                </p>
-                                            {/if}
-                                        </div>
-                                    {/if}
-                                </button>
+                                    </button>
+                                </Toggle>
                             {:else if edit || 'final' in assignment}
                                 <div class="w-full px-4 text-left mt-2 flex rounded-md p-3 {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
                                     {#if width > 1000}

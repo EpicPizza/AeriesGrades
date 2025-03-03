@@ -86,6 +86,10 @@ There is no seperate dev/prod command, extension must be built to be tested.
 0.5.3
 - Fixed bug, overlay for search/notif not closing.
 
+0.5.4
+- Added indicator on top showing what type of gradebook the extension detects.
+- Added temporary error pages while support for more types of gradebooks are underway.
+
 ## Testing
 
 Here is how to test the extension:

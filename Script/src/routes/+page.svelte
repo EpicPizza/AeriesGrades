@@ -7,11 +7,11 @@
 
     const started = writable(false);
 
-    const defaultKeywords = { keywords: "final", version: "0.5.3" };
+    const defaultKeywords = { keywords: "final", version: "0.5.4" };
     export const settings = getSettings();
 
     function getSettings() {
-        const { set, subscribe, update } = writable({ version: "0.5.3", zeros: "no", developer: "off", mode: "default", keywords: "final", edited: false });
+        const { set, subscribe, update } = writable({ version: "0.5.4", zeros: "no", developer: "off", mode: "default", keywords: "final", edited: false });
         
         function init() {
             const saved = localStorage.getItem("aeries-grades+-settings");
@@ -63,7 +63,13 @@
             const page = document.getElementById("AeriesFullPageContent");
 
             open = page.className.includes("blur");
-        })
+        });
+
+        const top = document.createElement("div");
+
+        top.setAttribute("id", "aeriesgradesplus-top");
+
+        main.insertAdjacentElement("afterbegin", top);
 
         settings.init();
     }

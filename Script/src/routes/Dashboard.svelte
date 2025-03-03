@@ -60,8 +60,6 @@
 
             period.url = period.url.replaceAll("&amp;", "&");
 
-            console.log(period.missing);
-
             if(!period.missing.includes("NonMissingAssignment")) {
                 period.missing = period.missing.substring(period.missing.indexOf("n>") + 2, period.missing.indexOf("</s"));
             } else {
