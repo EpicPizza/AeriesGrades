@@ -89,11 +89,6 @@ export function scrapPeriods(doc) {
         classes: classes.slice(last, classes.length),
     });
 
-    localStorage.setItem("classes", JSON.stringify({
-        sets: sets,
-        timestamp: new Date().valueOf(),
-    }));
-
     return {
         classes: classes,
         sets: sets,
@@ -118,7 +113,10 @@ export async function fetchPeriods() {
 
         console.log(local);
 
-        if(new Date().valueOf() - local.timestamp < 60000) {
+        const name = await hashString(document.querySelector(".StudentName").innerText);
+        const cachedName = local.name;
+
+        if(new Date().valueOf() - local.timestamp < 60000 && name == cachedName) {
             return local.sets;
         }
     }
@@ -129,5 +127,24 @@ export async function fetchPeriods() {
 
     const parsed = scrapPeriods(new DOMParser().parseFromString(data, "text/html"));
 
+    const name = await hashString(document.querySelector(".StudentName").innerText);
+
+    localStorage.setItem("classes", JSON.stringify({
+        sets: parsed.sets,
+        timestamp: new Date().valueOf(),
+        name: name,
+    }));
+
     return parsed.sets;
+}
+
+async function hashString(str) {
+    const utf8Encode = new TextEncoder();
+    const data = utf8Encode.encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray
+      .map((bytes) => bytes.toString(16).padStart(2, '0'))
+      .join('');
+    return hashHex;
 }

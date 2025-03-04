@@ -94,6 +94,9 @@ There is no seperate dev/prod command, extension must be built to be tested.
 - Changed Dashboard so it loads classes from GradeSummary.aspx instead
 - Added switcher on period pages that also loads from GradeSummary.aspx
 
+0.6.1
+- Bug fix: cache not resetting when student is switched.
+
 ## Testing
 
 Here is how to test the extension:
