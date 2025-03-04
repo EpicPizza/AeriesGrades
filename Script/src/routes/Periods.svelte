@@ -3,6 +3,7 @@
     import { fade, fly, slide } from "svelte/transition";
     import { persisted } from 'svelte-persisted-store'
     import Tooltip from "./Tooltip.svelte";
+    import { scrapPeriods } from "./periods";
 
     export let started;
     export let settings;
@@ -17,95 +18,13 @@
     let classes = [];
     let sets = [];
 
-    function start() {
+    async function start() {
         const current = document.querySelector(".AeriesFullPageParentNavSubLinkMenu > .CurrentPage").innerText;
 
-        document.querySelectorAll(".CardWithPeriod").forEach((card, i) => {
-            const period = {};
+        const parsed = scrapPeriods(document);
 
-            for(let j = 0; j < card.childNodes.length; j++) {
-                if(card.childNodes[j].nodeType == 3 && card.childNodes[j].nodeValue.replaceAll("\n", "").replaceAll("\t", "").trim() != "") {
-                    period.teacher = card.childNodes[j].nodeValue.replaceAll("\n", "").replaceAll("\t", "").trim();
-
-                    period.teacher = period.teacher.toLowerCase();
-                    period.teacher = period.teacher.replace("*", "");
-
-                    period.teacher = period.teacher.replace(period.teacher.charAt(0), period.teacher.charAt(0).toUpperCase());
-
-                    const segment = period.teacher.substring(period.teacher.indexOf(", "), period.teacher.indexOf(", ") + 3);
-
-                    period.teacher = period.teacher.replace(segment, segment.toUpperCase());
-                }
-            }
-
-            period.term = card.parentElement.parentElement.previousElementSibling.children[3].innerText;
-            period.number = card.parentElement.parentElement.previousElementSibling.children[4].innerText;
-
-            for(let j = 0; j < card.children.length; j++) {
-                const child = card.children[j];
-
-                if(child == undefined) return;
-
-                if(child.className.includes("Period") && 'innerText' in child) {
-                    period.number = child.innerText;
-                }
-
-                if(child.className.includes("RightSide") && 'innerText' in child.children[1]) {
-                    let info = child.children[1].innerText.replaceAll("\t", "").replaceAll("\n\n", "\n").replaceAll("\n\n", "\n").replaceAll("\n\n", "\n").replaceAll("\n\n", "\n").split("\n");
-
-                    info = info.filter((i) => i != "");
-
-                    if(info.length < 2) {
-                        period.letter = "N/A";
-                        period.grade = 0;
-                    } else {
-                        period.letter = info[0];
-                        period.grade = parseFloat(info[1].substring(1, info[1].length - 1));
-                    }
-                }
-
-                if(child.className.includes("TextHeading") && 'innerText' in child) {
-                    period.name = child.innerText;
-                }
-
-                if(child.className.includes("footer") && 'innerText' in child.children[1]) {
-
-                    period.missing = parseInt(child.children[1].innerText);
-                }
-            }
-
-            const url = new URL(location.href.substring(0, location.href.lastIndexOf("/") + 1) + "GradebookDetails.aspx");
-            url.searchParams.set("class", period.name);
-            url.searchParams.set("term", period.term);
-            url.searchParams.set("period", period.number);
-
-            period.url = url.toString();
-
-            classes.push(period);
-
-        });
-
-        let last = 0;
-        let next = "Current Terms";
-
-        document.querySelectorAll(".SubHeaderRow").forEach((row) => {
-            if(!row.id.includes("MainContent") || row.id.includes("01")) return;
-
-            let index = parseInt(row.id.substring(row.id.indexOf("ails_ctl") + 8, row.id.indexOf("_tr"))) - 1;
-
-            sets.push({
-                label: next,
-                classes: classes.slice(last, index),
-            });
-
-            last = index;
-            next = row.innerText.trim();
-        });
-
-        sets.push({
-            label: next,
-            classes: classes.slice(last, classes.length),
-        });
+        sets = parsed.sets;
+        classes = parsed.classes;
     }
     
 
@@ -196,7 +115,7 @@
                 {/if}
             </div>
 
-            <p class="mt-2 text-right text-sm opacity-75">Version 0.5.4</p>
+            <p class="mt-2 text-right text-sm opacity-75">Version 0.6.0</p>
         
             <button aria-label="Close Settings" on:click|preventDefault={() => { settingsOpen = false }} class="p-1 transition-all rounded-full {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} absolute top-6 right-6">
                 <div class="{$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">

@@ -2,10 +2,10 @@
     import { getContext } from "svelte";
     import { fade, fly, slide } from "svelte/transition";
     import { persisted } from 'svelte-persisted-store'
+    import { getPeriods, scrapPeriods } from "./periods";
 
     export let started;
     export let settings;
-    export let defaultKeywords;
 
     $: {
         if($started) {
@@ -13,73 +13,22 @@
         }
     }
 
-    let classes = [];
     let sets = [];
 
     let loading = true;
 
     async function start() {
-        const rawClasses = (await (await fetch(location.href.substring(0, location.href.lastIndexOf("/") + 1) + "Widgets/ClassSummary/GetClassSummary?IsProfile=True&_=" + new Date().valueOf(), {
-            "body": null,
-            "method": "GET",
-        })).json());
+        const fetched = await getPeriods();
 
-        let newClasses = rawClasses.map((rawClass) => ({
-            teacher: rawClass.TeacherName, 
-            term: rawClass.TermGrouping, 
-            number: rawClass.PeriodTitle, 
-            grade: parseInt(rawClass.CurrentPercentOrAverage.substring(0, rawClass.CurrentPercentOrAverage.length - 2)), 
-            letter: rawClass.CurrentMark, 
-            name: rawClass.CourseName == "" ? "Untitled" : rawClass.CourseName, 
-            missing: rawClass.MissingAssignments, 
-            url: rawClass.Gradebook == "" ? null : rawClass.Gradebook.substring(rawClass.Gradebook.indexOf("href=\"") + 6, rawClass.Gradebook.indexOf("\">")) 
-        }));
+        console.log(fetched);
 
-        newClasses = newClasses.filter(period => period.url != null);
-
-        newClasses.forEach(period => {
-            period.teacher = period.teacher.toLowerCase();
-            period.teacher = period.teacher.replace("*", "");
-
-            period.teacher = period.teacher.replace(period.teacher.charAt(0), period.teacher.charAt(0).toUpperCase());
-
-            const segment = period.teacher.substring(period.teacher.indexOf(", "), period.teacher.indexOf(", ") + 3);
-
-            period.teacher = period.teacher.replace(segment, segment.toUpperCase());
-
-            if(isNaN(period.grade)) {
-                period.grade = 0;
-                period.letter = "N/A";
-            } else if(period.letter == "") {
-                period.letter = "N/A";
-            }
-
-            if(period.missing == "</span>") {
-                period.missing = 0;
-            }
-
-            period.url = period.url.replaceAll("&amp;", "&");
-
-            if(!period.missing.includes("NonMissingAssignment")) {
-                period.missing = period.missing.substring(period.missing.indexOf("n>") + 2, period.missing.indexOf("</s"));
-            } else {
-                period.missing = 0;
-            }
-        })
-
-        sets.push({
-            label: "Current Terms",
-            classes: newClasses,
-        });
-
-        periods = newClasses;
+        sets = fetched.length == 0 ? [] : [ fetched[0] ];
 
         loading = false;
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 200));
 
         window.dispatchEvent(new Event('resize'));
-
     }
     
 
@@ -88,8 +37,6 @@
     
     //{settings.mode == 'dark' ? "" : $settings.mode == 'light' ? "" : ""}
 </script>
-
-<div class="hidden" id="hook">{JSON.stringify({ periods: classes })}</div>
 
 <div class="p-8 {$settings.mode == 'dark' ? "bg-zinc-900 text-white" : $settings.mode == 'light' ? "bg-zinc-100 text-black" : "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white"}  h-full w-full relative rounded-lg">
 
@@ -109,7 +56,7 @@
         <p class="mb-4 text-xl font-bold">{set.label}:</p>
 
         <!-- Cannot use .grid since it will collide with another grid with class .grid aeries uses for dashboard. -->
-        <div bind:this={grid} style="display: grid;" class="grid-cols-1 mb-3 sm:grid-cols-2 md:grid-cols-3 gap-2 w-full">
+        <div bind:this={grid} style="display: grid;" class="grid-cols-1 mb-6 sm:grid-cols-2 md:grid-cols-3 gap-2 w-full">
             {#each classes as period, i}
                 <a bind:this={periods[i]} href={period.url} on:click={() => { localStorage.setItem("navigating", "true"); }} class="{$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"} rounded-lg p-4 w-full flex gap-2 text-left">
                     <div class="w-full">

@@ -90,6 +90,10 @@ There is no seperate dev/prod command, extension must be built to be tested.
 - Added indicator on top showing what type of gradebook the extension detects.
 - Added temporary error pages while support for more types of gradebooks are underway.
 
+0.6.0
+- Changed Dashboard so it loads classes from GradeSummary.aspx instead
+- Added switcher on period pages that also loads from GradeSummary.aspx
+
 ## Testing
 
 Here is how to test the extension:

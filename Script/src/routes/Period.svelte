@@ -9,6 +9,7 @@
     import Tooltip from "./Tooltip.svelte";
     import Toggle from "./Toggle.svelte";
     import Portal from "svelte-portal";
+    import Switcher from "./Switcher.svelte";
 
     const types = [
         {
@@ -767,12 +768,21 @@
 {#if (recognizedType == null || recognizedType.supported == false) && loading == false}
     <Portal target="#aeriesgradesplus-top">
         <div class="p-8 {$settings.mode == 'dark' ? "bg-zinc-900 text-white" : $settings.mode == 'light' ? "bg-zinc-100 text-black" : "bg-zinc-100 dark:bg-zinc-900 text-black dark:text-white"} h-full w-full relative my-4 rounded-lg">
-            <a class="px-4 py-3 block w-fit rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}" href={location.href.substring(0, location.href.lastIndexOf("/") + 1) + "GradebookSummary.aspx"}>
-                <div class="inline-block -mt-2 translate-y-2 scale-90 mr-1 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg>
+            <div class="flex gap-2">
+                <a class="px-4 py-3 block w-fit rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}" href={location.href.substring(0, location.href.lastIndexOf("/") + 1) + "GradebookSummary.aspx"}>
+                    <div class="inline-block -mt-2 translate-y-2 scale-90 mr-1 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg>
+                    </div>
+                    All Grades
+                </a>
+                <div class="sm:block hidden">
+                    <Switcher {settings} {started} {period}></Switcher>    
                 </div>
-                All Grades
-            </a>
+            </div>
+
+            <div class="sm:hidden block mt-2 w-full">
+                <Switcher small {settings} {started} {period}></Switcher>    
+            </div>
                
             <div class="{$settings.mode == 'dark' ? "bg-zinc-900" : $settings.mode == 'light' ? "bg-zinc-100" : "bg-zinc-100 dark:bg-zinc-900"} mb-4 mt-8">
                 <div class="flex items-center justify-between mb-2">
@@ -881,12 +891,18 @@
         {/if}
 
         <div class="flex items-center justify-between">
-            <a class="px-4 py-3 rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}" href={location.href.substring(0, location.href.lastIndexOf("/") + 1) + "GradebookSummary.aspx"}>
-                <div class="inline-block -mt-2 translate-y-2 scale-90 mr-1 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg>
+            <div class="flex gap-2">
+                <a class="px-4 py-3 rounded-md {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}" href={location.href.substring(0, location.href.lastIndexOf("/") + 1) + "GradebookSummary.aspx"}>
+                    <div class="inline-block -mt-2 translate-y-2 scale-90 mr-1 {$settings.mode == 'dark' ? "fill-white" : $settings.mode == 'light' ? "fill-black" : "fill-black dark:fill-white"}">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px"><path d="m313-440 224 224-57 56-320-320 320-320 57 56-224 224h487v80H313Z"/></svg>
+                    </div>
+                    All Grades
+                </a>
+                <div class="sm:block hidden">
+                    <Switcher {settings} {started} {period}></Switcher>    
                 </div>
-                All Grades
-            </a>
+            </div>
+
             <div class="flex gap-2">
                 {#if $settings.developer == "on"}
                     <button on:click|preventDefault={() => { disabled = !disabled; }} class="px-4 py-3 transition-all rounded-md  {$settings.mode == 'dark' ? "bg-zinc-100 bg-opacity-10" : $settings.mode == 'light' ? "bg-zinc-900 bg-opacity-10" : "bg-zinc-900 dark:bg-zinc-100 bg-opacity-10 dark:bg-opacity-10"}">
@@ -909,6 +925,10 @@
                     </div>
                 </button>
             </div>
+        </div>
+
+        <div class="sm:hidden block mt-2 w-full">
+            <Switcher small {settings} {started} {period}></Switcher>    
         </div>
         
         {#if error}
