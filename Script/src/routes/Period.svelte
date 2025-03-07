@@ -129,20 +129,34 @@
 
                 if(!first) {
                     const before = document.querySelectorAll(".Card").length == 0 ? 0 : document.querySelectorAll(".Card")[0].innerHTML;
+                    
+                    await new Promise((resolve) => {
+                        new MutationObserver(function (e) {
+                            if (e[0].removedNodes) {
+                                resolve(true);
+                            }
+                        }).observe(document.querySelector('#ctl00_MainContent_subGBS_upEverything'), { childList: true });
 
-                    select.dispatchEvent(new Event('change'));
+                        select.dispatchEvent(new Event('change'));
 
-                    const result = await new Promise((resolve) => {
+                        setTimeout(() => {
+                            resolve(false);
+                        }, 5000);
+                    });
+
+                    await new Promise((resolve) => {
                         let cycles = 0;
 
                         const interval = setInterval(() => {
-                            const cards = document.querySelectorAll(".Card");
+                            //const cards = document.querySelectorAll(".Card");
 
                             //console.log(cards, cards.length);
 
                             //console.log(cards[0].innerText, before);
 
-                            if((cards.length > 0 && before == 0) || (cards.length > 0 && cards[0].innerHTML != before) || (cards.length == 0 && before != 0)) {
+                            //(cards.length > 0 && before == 0) || (cards.length > 0 && cards[0].innerHTML != before) || (cards.length == 0 && before != 0)
+
+                            if(document.getElementById("ctl00_MainContent_subGBS_summaryLegand")) {
                                 resolve(true);
                                 clearInterval(interval);
                             }

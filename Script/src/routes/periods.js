@@ -116,7 +116,7 @@ export async function fetchPeriods() {
         const name = await hashString(document.querySelector(".StudentName").innerText);
         const cachedName = local.name;
 
-        if(new Date().valueOf() - local.timestamp < 60000 && name == cachedName) {
+        if(new Date().valueOf() - local.timestamp < (15 * 1000) && name == cachedName) {
             return local.sets;
         }
     }
